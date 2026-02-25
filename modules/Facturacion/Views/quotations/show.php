@@ -31,6 +31,7 @@
                 <?= e($hasInvoice['sequence_code']) ?>
             </a>
         <?php endif; ?>
+        <button onclick="window.print()" class="btn" style="background:#4b5563;color:#fff;">🖨️ Imprimir</button>
         <a href="<?= url('quotations') ?>" class="btn" style="background:var(--border);color:var(--dark);">← Volver</a>
     </div>
 </div>
@@ -86,7 +87,7 @@
                             <?= money((float) $item['unit_price']) ?>
                         </td>
                         <td style="text-align:right;color:var(--danger);">
-                            <?= $item['discount_amount'] > 0 ? '-' . money((float) $item['discount_amount']) : '—' ?>
+                            <?= ($item['discount_amount'] ?? 0) > 0 ? '-' . money((float) $item['discount_amount']) : '—' ?>
                         </td>
                         <td style="text-align:right;font-weight:500;">
                             <?= money((float) $item['total']) ?>
@@ -98,10 +99,10 @@
                 <tr>
                     <td colspan="4" style="text-align:right;font-weight:600;">Subtotal Bruto:</td>
                     <td style="text-align:right;font-weight:600;">
-                        <?= money((float) $doc['subtotal']) ?>
+                        <?= money((float) ($doc['subtotal'] ?? 0)) ?>
                     </td>
                 </tr>
-                <?php if ($doc['discount_total'] > 0): ?>
+                <?php if (($doc['discount_total'] ?? 0) > 0): ?>
                     <tr>
                         <td colspan="4" style="text-align:right;font-weight:600;color:var(--danger);">Total Descuento:</td>
                         <td style="text-align:right;font-weight:600;color:var(--danger);">
@@ -125,5 +126,26 @@
         </table>
     </div>
 </div>
+
+<?php 
+$settings = get_settings();
+if (!empty($settings['bank_accounts'])): 
+?>
+    <div class="card" style="margin-top:20px;border-top:3px solid var(--primary);">
+        <div class="card-body">
+            <h4 style="margin-top:0;color:var(--primary);">💳 Información de Pago</h4>
+            <div style="white-space:pre-wrap;color:var(--secondary);font-size:14px;"><?= e($settings['bank_accounts']) ?></div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<style>
+    @media print {
+        .btn, .page-header div:last-child { display: none !important; }
+        .card { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+        body { background: white !important; padding: 0 !important; margin: 0 !important; }
+        .page-header { margin-bottom: 20px !important; }
+    }
+</style>
 
 <?php \Core\View::endSection(); ?>

@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS settings (
     address TEXT,
     phone VARCHAR(50),
     email VARCHAR(100),
+    bank_accounts TEXT,
     currency VARCHAR(10) DEFAULT 'DOP',
     fiscal_year_start DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

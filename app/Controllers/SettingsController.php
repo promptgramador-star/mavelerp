@@ -38,6 +38,7 @@ class SettingsController extends Controller
             'address' => trim($this->input('address', '')),
             'phone' => trim($this->input('phone', '')),
             'email' => trim($this->input('email', '')),
+            'bank_accounts' => trim($this->input('bank_accounts', '')),
             'currency' => trim($this->input('currency', 'DOP')),
             'fiscal_year_start' => $this->input('fiscal_year_start'),
         ];
@@ -48,6 +49,7 @@ class SettingsController extends Controller
             $this->db->execute(
                 "UPDATE settings SET company_name = :company_name, rnc = :rnc, 
                  address = :address, phone = :phone, email = :email, 
+                 bank_accounts = :bank_accounts, 
                  currency = :currency, fiscal_year_start = :fiscal_year_start 
                  WHERE id = :id",
                 array_merge($data, ['id' => $existing['id']])

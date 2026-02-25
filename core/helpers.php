@@ -144,3 +144,19 @@ function money(float|int $amount, string $currency = 'DOP'): string
 {
     return $currency . ' ' . number_format((float) $amount, 2, '.', ',');
 }
+/**
+ * Obtiene la configuración de la empresa desde la base de datos.
+ */
+function get_settings(): array
+{
+    static $settings = null;
+    if ($settings === null) {
+        try {
+            $db = \Core\Database::getInstance();
+            $settings = $db->fetch("SELECT * FROM settings LIMIT 1") ?: [];
+        } catch (\Exception $e) {
+            $settings = [];
+        }
+    }
+    return $settings;
+}

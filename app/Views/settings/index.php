@@ -39,6 +39,14 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label for="bank_accounts">Cuentas Bancarias (Visible en facturas)</label>
+                <textarea id="bank_accounts" name="bank_accounts" rows="3"
+                    placeholder="Ej: Banco Popular: 000000000&#10;Banco Reservas: 000000000"><?= e($settings['bank_accounts'] ?? '') ?></textarea>
+                <small style="color:var(--secondary);">Este texto se mostrará en el pie de página de sus facturas y
+                    cotizaciones.</small>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="currency">Moneda</label>
