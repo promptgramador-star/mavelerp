@@ -70,13 +70,17 @@
                             <?= number_format((float) $item['quantity'], 2) ?>
                         </td>
                         <td style="text-align:right;">
-                            <?= money((float) $item['unit_price']) ?>
+                            <?= money((float) $item['unit_price'], $doc['currency'] ?? 'DOP') ?>
                         </td>
                         <td style="text-align:right;color:var(--danger);">
-                            <?= ($item['discount_amount'] ?? 0) > 0 ? '-' . money((float) $item['discount_amount']) : '—' ?>
+                            <?php if (($item['discount_amount'] ?? 0) > 0): ?>
+                                <?= ($item['discount_percentage'] ?? 0) > 0 ? '(' . (float) $item['discount_percentage'] . '%) ' : '' ?>-<?= money((float) $item['discount_amount'], $doc['currency'] ?? 'DOP') ?>
+                            <?php else: ?>
+                                —
+                            <?php endif; ?>
                         </td>
                         <td style="text-align:right;font-weight:500;">
-                            <?= money((float) $item['total']) ?>
+                            <?= money((float) $item['total'], $doc['currency'] ?? 'DOP') ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -85,27 +89,27 @@
                 <tr>
                     <td colspan="4" style="text-align:right;font-weight:600;">Subtotal Bruto:</td>
                     <td style="text-align:right;font-weight:600;">
-                        <?= money((float) ($doc['subtotal'] ?? 0)) ?>
+                        <?= money((float) ($doc['subtotal'] ?? 0), $doc['currency'] ?? 'DOP') ?>
                     </td>
                 </tr>
                 <?php if (($doc['discount_total'] ?? 0) > 0): ?>
                     <tr>
                         <td colspan="4" style="text-align:right;font-weight:600;color:var(--danger);">Total Descuento:</td>
                         <td style="text-align:right;font-weight:600;color:var(--danger);">
-                            - <?= money((float) $doc['discount_total']) ?>
+                            - <?= money((float) $doc['discount_total'], $doc['currency'] ?? 'DOP') ?>
                         </td>
                     </tr>
                 <?php endif; ?>
                 <tr>
                     <td colspan="4" style="text-align:right;font-weight:600;">ITBIS (18%):</td>
                     <td style="text-align:right;font-weight:600;">
-                        <?= money((float) $doc['tax']) ?>
+                        <?= money((float) $doc['tax'], $doc['currency'] ?? 'DOP') ?>
                     </td>
                 </tr>
                 <tr style="font-size:18px;background:var(--bg-light);">
                     <td colspan="4" style="text-align:right;font-weight:700;">Total:</td>
                     <td style="text-align:right;font-weight:700;color:var(--primary);">
-                        <?= money((float) $doc['total']) ?>
+                        <?= money((float) $doc['total'], $doc['currency'] ?? 'DOP') ?>
                     </td>
                 </tr>
             </tfoot>

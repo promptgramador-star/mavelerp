@@ -83,9 +83,11 @@ class FacturacionController extends Controller
             $discountTotal = 0;
             $items = [];
 
+            $currency = $this->input('currency', 'DOP');
+
             $quantities = $_POST['item_quantity'] ?? [];
             $prices = $_POST['item_price'] ?? [];
-            $discounts = $_POST['item_discount'] ?? [];
+            $discounts = $_POST['item_discount_percent'] ?? [];
             $taxableFlags = $_POST['item_is_taxable'] ?? [];
 
             foreach ($descriptions as $i => $desc) {
@@ -94,12 +96,15 @@ class FacturacionController extends Controller
 
                 $qty = (float) ($quantities[$i] ?? 0);
                 $price = (float) ($prices[$i] ?? 0);
-                $disc = (float) ($discounts[$i] ?? 0);
+                $discPercent = (float) ($discounts[$i] ?? 0);
                 $isTaxable = (bool) ($taxableFlags[$i] ?? 1);
 
-                $lineTotal = ($qty * $price) - $disc;
-                $subtotal += ($qty * $price);
-                $discountTotal += $disc;
+                $lineSubtotal = $qty * $price;
+                $discAmount = $lineSubtotal * ($discPercent / 100);
+
+                $lineTotal = $lineSubtotal - $discAmount;
+                $subtotal += $lineSubtotal;
+                $discountTotal += $discAmount;
 
                 if ($isTaxable) {
                     $taxableSubtotal += $lineTotal;
@@ -110,7 +115,8 @@ class FacturacionController extends Controller
                     'description' => trim($desc),
                     'quantity' => $qty,
                     'unit_price' => $price,
-                    'discount_amount' => $disc,
+                    'discount_percentage' => $discPercent,
+                    'discount_amount' => $discAmount,
                     'is_taxable' => $isTaxable ? 1 : 0,
                     'total' => $lineTotal,
                     'product_id' => !empty($_POST['item_product_id'][$i]) ? (int) $_POST['item_product_id'][$i] : null,
@@ -122,11 +128,12 @@ class FacturacionController extends Controller
 
             // Insertar documento
             $docId = $this->db->insert(
-                "INSERT INTO documents (document_type, sequence_code, customer_id, status, subtotal, discount_total, tax, total, issue_date)
-                VALUES ('COT', :code, :customer, 'DRAFT', :subtotal, :discount, :tax, :total, :date)",
+                "INSERT INTO documents (document_type, sequence_code, customer_id, status, currency, subtotal, discount_total, tax, total, issue_date)
+                VALUES ('COT', :code, :customer, 'DRAFT', :currency, :subtotal, :discount, :tax, :total, :date)",
                 [
                     'code' => $code,
                     'customer' => $customerId,
+                    'currency' => $currency,
                     'subtotal' => $subtotal,
                     'discount' => $discountTotal,
                     'tax' => $tax,
@@ -138,8 +145,8 @@ class FacturacionController extends Controller
             // Insertar ítems
             foreach ($items as $item) {
                 $this->db->insert(
-                    "INSERT INTO document_items (document_id, line_number, product_id, description, quantity, unit_price, discount_amount, is_taxable, total)
-                    VALUES (:doc_id, :line, :prod, :desc, :qty, :price, :disc, :taxable, :total)",
+                    "INSERT INTO document_items (document_id, line_number, product_id, description, quantity, unit_price, discount_percentage, discount_amount, is_taxable, total)
+                    VALUES (:doc_id, :line, :prod, :desc, :qty, :price, :disc_perc, :disc_amt, :taxable, :total)",
                     [
                         'doc_id' => $docId,
                         'line' => $item['line_number'],
@@ -147,7 +154,8 @@ class FacturacionController extends Controller
                         'desc' => $item['description'],
                         'qty' => $item['quantity'],
                         'price' => $item['unit_price'],
-                        'disc' => $item['discount_amount'],
+                        'disc_perc' => $item['discount_percentage'],
+                        'disc_amt' => $item['discount_amount'],
                         'taxable' => $item['is_taxable'],
                         'total' => $item['total'],
                     ]
@@ -263,16 +271,16 @@ class FacturacionController extends Controller
                  WHERE document_type = 'FAC' AND year = :year",
                 ['year' => $year]
             );
-
             $newCode = $seq['prefix'] . $year . '-' . str_pad((string) $seq['current_number'], 5, '0', STR_PAD_LEFT);
 
             $facId = $this->db->insert(
-                "INSERT INTO documents (document_type, sequence_code, customer_id, reference_document_id, status, subtotal, discount_total, tax, total, issue_date) 
-                 VALUES ('FAC', :code, :customer, :ref, 'DRAFT', :sub, :disc, :tax, :total, :date)",
+                "INSERT INTO documents (document_type, sequence_code, customer_id, reference_document_id, status, currency, subtotal, discount_total, tax, total, issue_date) 
+                 VALUES ('FAC', :code, :customer, :ref, 'DRAFT', :currency, :sub, :disc, :tax, :total, :date)",
                 [
                     'code' => $newCode,
                     'customer' => $cot['customer_id'],
                     'ref' => $cotId,
+                    'currency' => $cot['currency'] ?? 'DOP',
                     'sub' => $cot['subtotal'],
                     'disc' => $cot['discount_total'],
                     'tax' => $cot['tax'],
@@ -288,8 +296,8 @@ class FacturacionController extends Controller
 
             foreach ($items as $item) {
                 $this->db->insert(
-                    "INSERT INTO document_items (document_id, line_number, product_id, description, quantity, unit_price, discount_amount, is_taxable, total) 
-                     VALUES (:doc_id, :line, :prod, :desc, :qty, :price, :disc, :taxable, :total)",
+                    "INSERT INTO document_items (document_id, line_number, product_id, description, quantity, unit_price, discount_percentage, discount_amount, is_taxable, total) 
+                     VALUES (:doc_id, :line, :prod, :desc, :qty, :price, :disc_perc, :disc_amt, :taxable, :total)",
                     [
                         'doc_id' => $facId,
                         'line' => $item['line_number'],
@@ -297,7 +305,8 @@ class FacturacionController extends Controller
                         'desc' => $item['description'],
                         'qty' => $item['quantity'],
                         'price' => $item['unit_price'],
-                        'disc' => $item['discount_amount'],
+                        'disc_perc' => $item['discount_percentage'] ?? 0,
+                        'disc_amt' => $item['discount_amount'],
                         'taxable' => $item['is_taxable'] ?? 1,
                         'total' => $item['total'],
                     ]

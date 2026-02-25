@@ -34,7 +34,7 @@
                                 <?= e($doc['customer_name'] ?? '—') ?>
                             </td>
                             <td style="text-align:right;">
-                                <?= money((float) $doc['total']) ?>
+                                <?= money((float) $doc['total'], $doc['currency'] ?? 'DOP') ?>
                             </td>
                             <td><span class="status status-<?= strtolower($doc['status']) ?>">
                                     <?= e($doc['status']) ?>

@@ -49,13 +49,15 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="currency">Moneda</label>
-                    <select id="currency" name="currency">
-                        <option value="DOP" <?= ($settings['currency'] ?? '') === 'DOP' ? 'selected' : '' ?>>DOP - Peso
-                            Dominicano</option>
-                        <option value="USD" <?= ($settings['currency'] ?? '') === 'USD' ? 'selected' : '' ?>>USD - Dólar
-                        </option>
-                    </select>
+                    <label>Monedas Habilitadas (Facturación)</label>
+                    <?php
+                    $currencies = explode(',', $settings['currency'] ?? 'DOP');
+                    ?>
+                    <div style="display:flex;gap:15px;margin-top:8px;">
+                        <label><input type="checkbox" name="currency[]" value="DOP" <?= in_array('DOP', $currencies) ? 'checked' : '' ?>> DOP - Peso Dominicano</label>
+                        <label><input type="checkbox" name="currency[]" value="USD" <?= in_array('USD', $currencies) ? 'checked' : '' ?>> USD - Dólar</label>
+                        <label><input type="checkbox" name="currency[]" value="EUR" <?= in_array('EUR', $currencies) ? 'checked' : '' ?>> EUR - Euro</label>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="fiscal_year_start">Inicio Año Fiscal</label>

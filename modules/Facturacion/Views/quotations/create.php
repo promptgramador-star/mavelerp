@@ -6,6 +6,10 @@
     </p>
 </div>
 
+<?php
+$appSettings = get_settings();
+$currencies = explode(',', $appSettings['currency'] ?? 'DOP');
+?>
 <form method="POST" action="<?= url('quotations/store') ?>" id="cotForm">
     <?= csrf_field() ?>
 
@@ -30,6 +34,17 @@
                     <label for="issue_date">Fecha de Emisión</label>
                     <input type="date" id="issue_date" name="issue_date" value="<?= date('Y-m-d') ?>">
                 </div>
+                <div class="form-group">
+                    <label for="currency">Moneda</label>
+                    <select id="currency" name="currency" onchange="updateCurrencySymbol()">
+                        <?php foreach ($currencies as $curr):
+                            $curr = trim($curr);
+                            if (!$curr)
+                                continue; ?>
+                            <option value="<?= $curr ?>"><?= $curr ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -49,7 +64,7 @@
                         <th>Descripción</th>
                         <th style="width:80px;">Cant.</th>
                         <th style="width:120px;">Precio Unit.</th>
-                        <th style="width:100px;">Desc. ($)</th>
+                        <th style="width:100px;">Desc. (%)</th>
                         <th style="width:80px;">ITBIS</th>
                         <th style="width:130px;">Total</th>
                         <th style="width:40px;"></th>
@@ -61,25 +76,25 @@
                 <tfoot>
                     <tr>
                         <td colspan="7" style="text-align:right;padding:8px 20px;">Subtotal Bruto:</td>
-                        <td id="subtotalDisplay" style="text-align:right;padding:8px 20px;">DOP 0.00</td>
+                        <td id="subtotalDisplay" style="text-align:right;padding:8px 20px;">--</td>
                         <td></td>
                     </tr>
                     <tr>
                         <td colspan="7" style="text-align:right;padding:8px 20px;color:var(--danger);">(-) Descuento
                             Total:</td>
-                        <td id="discountDisplay" style="text-align:right;padding:8px 20px;color:var(--danger);">DOP 0.00
+                        <td id="discountDisplay" style="text-align:right;padding:8px 20px;color:var(--danger);">--
                         </td>
                         <td></td>
                     </tr>
                     <tr>
                         <td colspan="7" style="text-align:right;padding:8px 20px;">ITBIS (18%) s/ Base:</td>
-                        <td id="taxDisplay" style="text-align:right;padding:8px 20px;">DOP 0.00</td>
+                        <td id="taxDisplay" style="text-align:right;padding:8px 20px;">--</td>
                         <td></td>
                     </tr>
                     <tr style="font-size:1.2rem;background:var(--bg-light);">
                         <td colspan="7" style="text-align:right;padding:12px 20px;font-weight:700;">TOTAL FINAL:</td>
                         <td id="totalDisplay"
-                            style="text-align:right;padding:12px 20px;font-weight:800;color:var(--primary);">DOP 0.00
+                            style="text-align:right;padding:12px 20px;font-weight:800;color:var(--primary);">--
                         </td>
                         <td></td>
                     </tr>
@@ -161,12 +176,12 @@
         <td><input type="text" name="item_description[]" id="desc-${lineCount}" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"></td>
         <td><input type="number" name="item_quantity[]" id="qty-${lineCount}" value="1" step="0.01" min="0.01" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;"></td>
         <td><input type="number" name="item_price[]" id="price-${lineCount}" value="0" step="0.01" min="0" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:right;"></td>
-        <td><input type="number" name="item_discount[]" id="disc-${lineCount}" value="0" step="0.01" min="0" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:right;"></td>
+        <td><input type="number" name="item_discount_percent[]" id="disc-${lineCount}" value="0" step="0.01" min="0" max="100" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:right;"></td>
         <td style="text-align:center;">
             <input type="checkbox" name="item_is_taxable[]" id="tax-${lineCount}" value="1" checked onchange="calcLine(${lineCount})">
             <input type="hidden" name="item_is_taxable_hidden[]" value="1">
         </td>
-        <td id="lineTotal-${lineCount}" style="text-align:right;font-weight:600;padding-right:20px;">DOP 0.00</td>
+        <td id="lineTotal-${lineCount}" style="text-align:right;font-weight:600;padding-right:20px;">--</td>
         <td><button type="button" onclick="removeLine(${lineCount})" style="background:none;border:none;cursor:pointer;font-size:16px;">❌</button></td>
     `;
         document.getElementById('itemsBody').appendChild(row);
@@ -223,13 +238,28 @@
         calcLine(line);
     }
 
+    let currentCurrency = 'DOP';
+
+    function updateCurrencySymbol() {
+        const currSelect = document.getElementById('currency');
+        if (currSelect) {
+            currentCurrency = currSelect.value;
+        }
+        calcTotals();
+        // Update all line totals
+        for (let i = 1; i <= lineCount; i++) {
+            if (document.getElementById('lineTotal-' + i)) calcLine(i);
+        }
+    }
+
     function calcLine(line) {
         const qty = parseFloat(document.getElementById('qty-' + line).value) || 0;
         const price = parseFloat(document.getElementById('price-' + line).value) || 0;
-        const disc = parseFloat(document.getElementById('disc-' + line).value) || 0;
+        const discPercent = parseFloat(document.getElementById('disc-' + line).value) || 0;
 
-        const total = (qty * price) - disc;
-        document.getElementById('lineTotal-' + line).textContent = 'DOP ' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        const discAmount = (qty * price) * (discPercent / 100);
+        const total = (qty * price) - discAmount;
+        document.getElementById('lineTotal-' + line).textContent = currentCurrency + ' ' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
         calcTotals();
     }
 
@@ -248,25 +278,27 @@
             const line = row.id.split('-')[1];
             const qty = parseFloat(document.getElementById('qty-' + line).value) || 0;
             const price = parseFloat(document.getElementById('price-' + line).value) || 0;
-            const disc = parseFloat(document.getElementById('disc-' + line).value) || 0;
+            const discPercent = parseFloat(document.getElementById('disc-' + line).value) || 0;
             const isTaxable = document.getElementById('tax-' + line).checked;
 
             const lineSubtotal = qty * price;
+            const discAmount = lineSubtotal * (discPercent / 100);
+
             subtotal += lineSubtotal;
-            totalDiscount += disc;
+            totalDiscount += discAmount;
 
             if (isTaxable) {
-                taxableSubtotal += (lineSubtotal - disc);
+                taxableSubtotal += (lineSubtotal - discAmount);
             }
         });
 
         const tax = taxableSubtotal * 0.18;
         const finalTotal = (subtotal - totalDiscount) + tax;
 
-        document.getElementById('subtotalDisplay').textContent = 'DOP ' + subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('discountDisplay').textContent = 'DOP ' + totalDiscount.toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('taxDisplay').textContent = 'DOP ' + tax.toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('totalDisplay').textContent = 'DOP ' + finalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('subtotalDisplay').textContent = currentCurrency + ' ' + subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        document.getElementById('discountDisplay').textContent = currentCurrency + ' ' + totalDiscount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        document.getElementById('taxDisplay').textContent = currentCurrency + ' ' + tax.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        document.getElementById('totalDisplay').textContent = currentCurrency + ' ' + finalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Cerrar resultados al hacer clic fuera
