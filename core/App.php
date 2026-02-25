@@ -57,12 +57,6 @@ class App
      */
     private function autoload(string $className): void
     {
-        // Core\ClassName → core/ClassName.php
-        // App\Controllers\XController → app/Controllers/XController.php
-        // App\Models\XModel → app/Models/XModel.php
-        // App\Middleware\XMiddleware → app/Middleware/XMiddleware.php
-        // Modules\ModuleName\Controllers\X → modules/ModuleName/Controllers/X.php
-
         $map = [
             'Core\\' => BASE_PATH . '/core/',
             'App\\Controllers\\' => BASE_PATH . '/app/Controllers/',
@@ -75,6 +69,9 @@ class App
             if (str_starts_with($className, $prefix)) {
                 $relativeClass = substr($className, strlen($prefix));
                 $file = $dir . str_replace('\\', '/', $relativeClass) . '.php';
+
+                // Normalizar separadores de ruta
+                $file = str_replace(['\\', '//'], '/', $file);
 
                 if (file_exists($file)) {
                     require_once $file;
