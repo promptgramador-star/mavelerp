@@ -131,25 +131,30 @@ class Router
     private function getUrl(): string
     {
         // 1. Intentar desde $_GET['url'] (poblado por .htaccess)
-        $url = $_GET['url'] ?? '';
-
-        // 2. Si está vacío, intentar desde REQUEST_URI
-        if (empty($url)) {
-            $uri = $_SERVER['REQUEST_URI'] ?? '';
-            $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-
-            // Eliminar la carpeta del script si existe
-            $basePath = dirname($scriptName);
-            if ($basePath !== '/' && $basePath !== '\\') {
-                $uri = str_replace($basePath, '', $uri);
-            }
-
-            // Eliminar index.php si está presente
-            $url = str_replace('/index.php', '', $uri);
-            $url = explode('?', $url)[0]; // Quitar query string
+        if (!empty($_GET['url'])) {
+            return trim(filter_var($_GET['url'], FILTER_SANITIZE_URL), '/');
         }
 
-        return trim(filter_var($url, FILTER_SANITIZE_URL), '/');
+        // 2. Si está vacío, intentar desde REQUEST_URI
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+
+        // Determinar la base (carpeta donde está el index.php)
+        $baseDir = str_replace('\\', '/', dirname($scriptName));
+
+        // Quitar la base del URI
+        if ($baseDir !== '/' && $baseDir !== '.') {
+            $uri = str_replace($baseDir, '', $uri);
+        }
+
+        // Quitar index.php si está presente
+        if (str_contains($uri, '/index.php')) {
+            $uri = str_replace('/index.php', '', $uri);
+        }
+
+        // Limpiar query string y barras finales
+        $url = explode('?', $uri)[0];
+        return trim($url, '/');
     }
 
     /**

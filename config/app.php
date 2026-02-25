@@ -7,7 +7,7 @@
 return [
     'name' => 'ERP Propietario RD',
     'version' => '0.1.0',
-    'debug' => false,
+    'debug' => true,
     'timezone' => 'America/Santo_Domingo',
     'charset' => 'UTF-8',
     'locale' => 'es_DO',
