@@ -45,8 +45,10 @@ class View
                 die("Layout no encontrado: " . self::$layout);
             }
 
-            // La variable $content estará disponible en el layout
-            self::$sections['content'] = $content;
+            // [FIX] Solo asignar si la sección 'content' no fue poblada vía startSection
+            if (empty(self::$sections['content'])) {
+                self::$sections['content'] = $content;
+            }
             include $layoutPath;
         } else {
             echo $content;
@@ -74,7 +76,11 @@ class View
 
         if (self::$layout !== null) {
             $layoutPath = BASE_PATH . '/app/Views/' . self::$layout . '.php';
-            self::$sections['content'] = $content;
+
+            // [FIX] Solo asignar si la sección 'content' no fue poblada vía startSection
+            if (empty(self::$sections['content'])) {
+                self::$sections['content'] = $content;
+            }
             include $layoutPath;
         } else {
             echo $content;
