@@ -1,0 +1,7 @@
+{
+    "name": "Inventario",
+    "display_name": "Inventario y Productos",
+    "version": "1.0.0",
+    "description": "Gestión de catálogo de productos, servicios y stock.",
+    "is_premium": false
+}

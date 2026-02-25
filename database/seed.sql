@@ -27,3 +27,10 @@ INSERT INTO chart_of_accounts (code, name, type) VALUES
 ('3101', 'Capital Social', 'EQUITY'),
 ('4101', 'Ventas de Productos', 'INCOME'),
 ('5101', 'Gastos Generales', 'EXPENSE');
+
+-- Activación de Módulos Base
+INSERT INTO module_license (module_id, is_enabled, activated_at) VALUES 
+(1, 1, NOW()),
+(2, 0, NULL),
+(3, 1, NOW()),
+(4, 1, NOW());

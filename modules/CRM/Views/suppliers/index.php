@@ -1,0 +1,67 @@
+<?php \Core\View::startSection('content'); ?>
+
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+        <h1>Proveedores</h1>
+        <p>Gestión de proveedores registrados</p>
+    </div>
+    <a href="<?= url('suppliers/create') ?>" class="btn btn-primary">+ Nuevo Proveedor</a>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:12px 20px;">
+        <form method="GET" action="<?= url('suppliers') ?>" style="display:flex;gap:10px;">
+            <input type="text" name="q" value="<?= e($search ?? '') ?>" placeholder="Buscar por nombre o RNC..."
+                style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <?php if (empty($suppliers)): ?>
+            <p style="color:var(--secondary);text-align:center;padding:40px;">No hay proveedores registrados.</p>
+        <?php else: ?>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>RNC</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th style="width:120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($suppliers as $s): ?>
+                        <tr>
+                            <td><strong>
+                                    <?= e($s['name']) ?>
+                                </strong></td>
+                            <td>
+                                <?= e($s['rnc'] ?: '—') ?>
+                            </td>
+                            <td>
+                                <?= e($s['phone'] ?: '—') ?>
+                            </td>
+                            <td>
+                                <?= e($s['email'] ?: '—') ?>
+                            </td>
+                            <td>
+                                <a href="<?= url('suppliers/edit/' . $s['id']) ?>" class="btn-action" title="Editar">✏️</a>
+                                <form method="POST" action="<?= url('suppliers/delete/' . $s['id']) ?>" style="display:inline;"
+                                    onsubmit="return confirm('¿Eliminar este proveedor?')">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn-action btn-danger-action" title="Eliminar">🗑️</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php \Core\View::endSection(); ?>

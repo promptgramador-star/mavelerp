@@ -1,0 +1,7 @@
+{
+    "name": "CRM",
+    "display_name": "Clientes y Proveedores",
+    "version": "1.0.0",
+    "description": "Gestión de clientes y proveedores con RNC fiscal.",
+    "is_premium": false
+}

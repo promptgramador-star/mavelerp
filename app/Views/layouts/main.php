@@ -21,6 +21,22 @@
                 <ul class="sidebar-nav">
                     <li><a href="<?= url('dashboard') ?>" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
                     </li>
+
+                    <!-- CRM -->
+                    <li><a href="<?= url('customers') ?>" class="nav-link"><span class="nav-icon">👤</span> Clientes</a>
+                    </li>
+                    <li><a href="<?= url('suppliers') ?>" class="nav-link"><span class="nav-icon">🏭</span> Proveedores</a>
+                    </li>
+
+                    <!-- Inventario -->
+                    <li><a href="<?= url('products') ?>" class="nav-link"><span class="nav-icon">📦</span> Productos</a>
+                    </li>
+
+                    <!-- Facturación -->
+                    <li><a href="<?= url('quotations') ?>" class="nav-link"><span class="nav-icon">📋</span>
+                            Cotizaciones</a></li>
+                    <li><a href="<?= url('invoices') ?>" class="nav-link"><span class="nav-icon">🧾</span> Facturas</a></li>
+
                     <?php if (\Core\Auth::isAdmin()): ?>
                         <li><a href="<?= url('settings') ?>" class="nav-link"><span class="nav-icon">⚙️</span> Configuración</a>
                         </li>
