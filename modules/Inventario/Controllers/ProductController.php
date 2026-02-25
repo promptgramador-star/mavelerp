@@ -4,6 +4,8 @@ namespace Modules\Inventario\Controllers;
 
 use Core\Controller;
 use Core\View;
+use ZipArchive;
+use SimpleXMLElement;
 
 class ProductController extends Controller
 {
@@ -95,17 +97,11 @@ class ProductController extends Controller
         redirect('products');
     }
 
-    /**
-     * Muestra el formulario de importación.
-     */
     public function importForm(): void
     {
         View::module('Inventario', 'products/import', ['title' => 'Importar Productos/Servicios']);
     }
 
-    /**
-     * Descarga la plantilla CSV de ejemplo.
-     */
     public function downloadTemplate(): void
     {
         ob_clean();
@@ -113,27 +109,15 @@ class ProductController extends Controller
         header('Content-Disposition: attachment; filename=plantilla_productos.csv');
 
         $output = fopen('php://output', 'w');
-
-        // Indicar a Excel que el separador es la coma
         fwrite($output, "sep=,\n");
-
-        // BOM para Excel en Windows (UTF-8)
         fwrite($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-        // Cabeceras
         fputcsv($output, ['nombre', 'sku', 'costo', 'precio', 'stock', 'es_servicio']);
-
-        // Ejemplos
         fputcsv($output, ['Producto de Ejemplo', 'PROD-001', '500.00', '1200.00', '10', '0']);
         fputcsv($output, ['Servicio Técnico', 'SERV-001', '0.00', '2500.00', '0', '1']);
-
         fclose($output);
         exit;
     }
 
-    /**
-     * Procesa el archivo CSV subido.
-     */
     public function importProcess(): void
     {
         $this->requirePost();
@@ -144,48 +128,33 @@ class ProductController extends Controller
             redirect('products/import');
         }
 
-        $file = $_FILES['csv_file']['tmp_name'];
-        $handle = fopen($file, 'r');
+        $filename = $_FILES['csv_file']['name'];
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $tmpFile = $_FILES['csv_file']['tmp_name'];
 
-        if ($handle === false) {
-            flash('error', 'No se pudo abrir el archivo.');
-            redirect('products/import');
+        $rows = [];
+
+        if ($ext === 'xlsx') {
+            $rows = $this->parseXlsx($tmpFile);
+        } else {
+            $rows = $this->parseCsv($tmpFile);
         }
 
-        // Leer primera línea
-        $firstLine = fgets($handle);
-
-        // Si la primera línea es 'sep=', la saltamos y leemos la siguiente (cabeceras)
-        if (str_starts_with($firstLine, 'sep=')) {
-            $headers = fgetcsv($handle);
-        } else {
-            // Si no es sep=, rebobinar o tratar la primera línea como cabecera
-            rewind($handle);
-            $headers = fgetcsv($handle);
+        if (empty($rows)) {
+            flash('error', 'El archivo está vacío o no tiene el formato correcto.');
+            redirect('products/import');
         }
 
         $imported = 0;
         $errors = 0;
-
         $this->db->beginTransaction();
 
         try {
-            while (($data = fgetcsv($handle)) !== false) {
-                // Mapear datos (asumiendo orden de la plantilla)
-                // nombre, sku, costo, precio, stock, es_servicio
-                if (count($data) < 2)
+            foreach ($rows as $index => $data) {
+                // Saltamos la cabecera si el nombre es 'nombre'
+                if ($index === 0 && strtolower($data[0] ?? '') === 'nombre')
                     continue;
-
-                $product = [
-                    'name' => trim($data[0]),
-                    'sku' => trim($data[1] ?? ''),
-                    'cost' => (float) ($data[2] ?? 0),
-                    'price' => (float) ($data[3] ?? 0),
-                    'stock' => (float) ($data[4] ?? 0),
-                    'is_service' => (int) ($data[5] ?? 0)
-                ];
-
-                if (empty($product['name'])) {
+                if (empty($data[0])) {
                     $errors++;
                     continue;
                 }
@@ -193,20 +162,92 @@ class ProductController extends Controller
                 $this->db->insert(
                     "INSERT INTO products (name, sku, cost, price, stock, is_service, created_at) 
                      VALUES (:name, :sku, :cost, :price, :stock, :is_service, NOW())",
-                    $product
+                    [
+                        'name' => trim($data[0]),
+                        'sku' => trim($data[1] ?? ''),
+                        'cost' => (float) ($data[2] ?? 0),
+                        'price' => (float) ($data[3] ?? 0),
+                        'stock' => (float) ($data[4] ?? 0),
+                        'is_service' => (int) ($data[5] ?? 0)
+                    ]
                 );
                 $imported++;
             }
-
             $this->db->commit();
-            flash('success', "Importación completada: {$imported} registros importados. " . ($errors > 0 ? "{$errors} omitidos por errores." : ""));
-
+            flash('success', "Importación completada: {$imported} registros creados. " . ($errors > 0 ? "{$errors} omitidos." : ""));
         } catch (\Exception $e) {
             $this->db->rollBack();
-            flash('error', 'Error durante la importación: ' . $e->getMessage());
+            flash('error', 'Error: ' . $e->getMessage());
         }
 
-        fclose($handle);
         redirect('products');
+    }
+
+    private function parseCsv(string $file): array
+    {
+        $handle = fopen($file, 'r');
+        $rows = [];
+        $firstLine = fgets($handle);
+        if (!str_starts_with($firstLine, 'sep=')) {
+            rewind($handle);
+        }
+        while (($data = fgetcsv($handle)) !== false) {
+            $rows[] = $data;
+        }
+        fclose($handle);
+        return $rows;
+    }
+
+    private function parseXlsx(string $file): array
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($file) !== true)
+            return [];
+
+        // 1. Leer Shared Strings (Textos)
+        $sharedStrings = [];
+        if (($index = $zip->locateName('xl/sharedStrings.xml')) !== false) {
+            $xml = simplexml_load_string($zip->getFromIndex($index));
+            foreach ($xml->si as $si) {
+                $sharedStrings[] = (string) ($si->t ?: $si->r->t);
+            }
+        }
+
+        // 2. Leer Hoja 1
+        $rows = [];
+        if (($index = $zip->locateName('xl/worksheets/sheet1.xml')) !== false) {
+            $xml = simplexml_load_string($zip->getFromIndex($index));
+            foreach ($xml->sheetData->row as $row) {
+                $rowData = [];
+                foreach ($row->c as $c) {
+                    $val = (string) $c->v;
+                    $type = (string) $c['t'];
+                    if ($type === 's') { // Shared String
+                        $val = $sharedStrings[(int) $val] ?? '';
+                    }
+                    // Mapear por columna (A, B, C...)
+                    $col = preg_replace('/[0-9]/', '', (string) $c['r']);
+                    $colIdx = $this->columnToIndex($col);
+                    $rowData[$colIdx] = $val;
+                }
+                // Rellenar huecos
+                for ($i = 0; $i < 6; $i++)
+                    if (!isset($rowData[$i]))
+                        $rowData[$i] = '';
+                ksort($rowData);
+                $rows[] = $rowData;
+            }
+        }
+        $zip->close();
+        return $rows;
+    }
+
+    private function columnToIndex(string $col): int
+    {
+        $index = 0;
+        for ($i = 0; $i < strlen($col); $i++) {
+            $index = $index * 26 + ord($col[$i]) - 0x40;
+        }
+        return $index - 1;
     }
 }
