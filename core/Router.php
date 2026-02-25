@@ -63,7 +63,8 @@ class Router
         $pattern = trim($pattern, '/');
         // Parámetros dinámicos: {param} → (\w+)
         $pattern = preg_replace('/\{([a-zA-Z_]+)\}/', '([\\w-]+)', $pattern);
-        return '/^' . str_replace('/', '\\/', $pattern) . '$/';
+        // Usar modificador 'i' para que sea insensible a mayúsculas
+        return '/^' . str_replace('/', '\\/', $pattern) . '$/i';
     }
 
     /**
@@ -132,13 +133,19 @@ class Router
         // 1. Intentar desde $_GET['url'] (poblado por .htaccess)
         $url = $_GET['url'] ?? '';
 
-        // 2. Si está vacío, intentar desde PATH_INFO o REQUEST_URI
+        // 2. Si está vacío, intentar desde REQUEST_URI
         if (empty($url)) {
             $uri = $_SERVER['REQUEST_URI'] ?? '';
             $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
 
-            // Eliminar el nombre del script (index.php) y la base_url
-            $url = str_replace($scriptName, '', $uri);
+            // Eliminar la carpeta del script si existe
+            $basePath = dirname($scriptName);
+            if ($basePath !== '/' && $basePath !== '\\') {
+                $uri = str_replace($basePath, '', $uri);
+            }
+
+            // Eliminar index.php si está presente
+            $url = str_replace('/index.php', '', $uri);
             $url = explode('?', $url)[0]; // Quitar query string
         }
 
@@ -159,7 +166,10 @@ class Router
 
         return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>404</title>
         <style>body{font-family:system-ui;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#f0f2f5;color:#333;}
-        .box{text-align:center;}.box h1{font-size:72px;margin:0;color:#3498db;}.box p{font-size:18px;color:#7f8c8d;}</style></head>
-        <body><div class="box"><h1>404</h1><p>Página no encontrada</p></div></body></html>';
+        .box{text-align:center;}.box h1{font-size:72px;margin:0;color:#3498db;}.box p{font-size:18px;color:#7f8c8d;}
+        .debug{font-size:12px;color:#bdc3c7;margin-top:20px;}</style></head>
+        <body><div class="box"><h1>404</h1><p>Página no encontrada</p>
+        <div class="debug">URL: ' . e($this->getUrl()) . ' | Method: ' . $_SERVER['REQUEST_METHOD'] . '</div>
+        </div></body></html>';
     }
 }
