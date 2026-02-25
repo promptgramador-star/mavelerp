@@ -75,6 +75,9 @@ class Router
         $url = $this->getUrl();
         $method = $_SERVER['REQUEST_METHOD'];
 
+        // DEBUG TEMPORAL — remover después de diagnosticar
+        echo "<!-- DEBUG: URL=[{$url}] METHOD=[{$method}] GET_URL=[" . ($_GET['url'] ?? 'EMPTY') . "] REQUEST_URI=[" . ($_SERVER['REQUEST_URI'] ?? '') . "] -->\n";
+
         foreach ($this->routes as $route) {
             if ($route['method'] !== $method) {
                 continue;
