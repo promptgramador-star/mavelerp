@@ -1,85 +1,282 @@
 <?php \Core\View::startSection('content'); ?>
 
-<div class="page-header">
-    <h1>Dashboard</h1>
-    <p>Bienvenido, <?= e(\Core\Session::get('user_name', '')) ?></p>
-</div>
-
-<!-- Estadísticas -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-info">
-            <h3><?= (int) ($stats['customers'] ?? 0) ?></h3>
-            <p>Clientes</p>
-        </div>
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Bienvenido, <?= e(\Core\Session::get('user_name', '')) ?></p>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon">🏭</div>
-        <div class="stat-info">
-            <h3><?= (int) ($stats['suppliers'] ?? 0) ?></h3>
-            <p>Proveedores</p>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon">📦</div>
-        <div class="stat-info">
-            <h3><?= (int) ($stats['products'] ?? 0) ?></h3>
-            <p>Productos</p>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon">📄</div>
-        <div class="stat-info">
-            <h3><?= (int) ($stats['documents'] ?? 0) ?></h3>
-            <p>Documentos</p>
-        </div>
+    <div style="display:flex;gap:10px;">
+        <a href="<?= url('quotations/create') ?>" class="btn btn-primary">+ Nueva Cotización</a>
+        <a href="<?= url('customers/create') ?>" class="btn" style="background:var(--success);color:#fff;">+ Nuevo
+            Cliente</a>
     </div>
 </div>
 
-<!-- Documentos Recientes -->
-<div class="card">
-    <div class="card-header">
-        <h2>Documentos Recientes</h2>
+<!-- ═══════════════ NIVEL 1: KPIs Financieros ═══════════════ -->
+<div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+
+    <!-- KPI: Ventas del Mes -->
+    <div class="stat-card" style="border-left: 4px solid var(--primary);">
+        <div class="stat-icon" style="background:#eff6ff;">💰</div>
+        <div class="stat-info">
+            <h3><?= money($kpis['sales_month']) ?></h3>
+            <p>Ventas del Mes</p>
+            <?php
+            $delta = $kpis['sales_prev'] > 0
+                ? round((($kpis['sales_month'] - $kpis['sales_prev']) / $kpis['sales_prev']) * 100, 1)
+                : 0;
+            $deltaColor = $delta >= 0 ? 'var(--success)' : 'var(--danger)';
+            $deltaIcon = $delta >= 0 ? '↑' : '↓';
+            ?>
+            <span style="font-size:12px;color:<?= $deltaColor ?>;font-weight:600;">
+                <?= $deltaIcon ?> <?= abs($delta) ?>% vs mes anterior
+            </span>
+        </div>
     </div>
-    <div class="card-body">
-        <?php if (empty($recentDocs)): ?>
-            <p class="text-muted">No hay documentos aún.</p>
-        <?php else: ?>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Tipo</th>
-                        <th>Cliente</th>
-                        <th>Total</th>
-                        <th>Estado</th>
-                        <th>Fecha</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($recentDocs as $doc): ?>
+
+    <!-- KPI: Cotizaciones Pendientes -->
+    <div class="stat-card" style="border-left: 4px solid var(--warning);">
+        <div class="stat-icon" style="background:#fefce8;">📋</div>
+        <div class="stat-info">
+            <h3><?= (int) $kpis['pending_cot'] ?></h3>
+            <p>Cotizaciones Borrador</p>
+            <span style="font-size:12px;color:var(--success);font-weight:500;">
+                <?= (int) $kpis['approved_cot'] ?> aprobadas
+            </span>
+        </div>
+    </div>
+
+    <!-- KPI: Facturas Emitidas -->
+    <div class="stat-card" style="border-left: 4px solid var(--success);">
+        <div class="stat-icon" style="background:#f0fdf4;">🧾</div>
+        <div class="stat-info">
+            <h3><?= (int) $kpis['sales_count'] ?></h3>
+            <p>Facturas este Mes</p>
+            <span style="font-size:12px;color:var(--secondary);">
+                <?= (int) $counts['customers'] ?> clientes · <?= (int) $counts['products'] ?> productos
+            </span>
+        </div>
+    </div>
+
+    <!-- KPI: Cuentas por Cobrar -->
+    <div class="stat-card" style="border-left: 4px solid var(--danger);">
+        <div class="stat-icon" style="background:#fef2f2;">📊</div>
+        <div class="stat-info">
+            <h3><?= money($kpis['receivable']) ?></h3>
+            <p>Cuentas por Cobrar</p>
+            <span style="font-size:12px;color:var(--secondary);">Facturas pendientes</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══════════════ NIVEL 2: Gráficos ═══════════════ -->
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px;">
+
+    <!-- Tendencia de Ventas 6 Meses -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Tendencia de Ventas</h2>
+            <span style="font-size:13px;color:var(--secondary);">Últimos 6 meses</span>
+        </div>
+        <div class="card-body" style="padding:16px 24px;">
+            <canvas id="trendChart" height="220"></canvas>
+        </div>
+    </div>
+
+    <!-- Top 5 Clientes -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Top Clientes</h2>
+            <span style="font-size:13px;color:var(--secondary);">Por facturación</span>
+        </div>
+        <div class="card-body" style="padding:16px 24px;">
+            <?php if (empty($topCustomers)): ?>
+                <p style="color:var(--secondary);text-align:center;padding:40px 0;">Sin datos aún</p>
+            <?php else: ?>
+                <canvas id="topChart" height="220"></canvas>
+            <?php endif; ?>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══════════════ NIVEL 3: Detalles ═══════════════ -->
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
+
+    <!-- Documentos Recientes -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Documentos Recientes</h2>
+            <a href="<?= url('quotations') ?>" style="font-size:13px;color:var(--primary);">Ver todos →</a>
+        </div>
+        <div class="card-body">
+            <?php if (empty($recentDocs)): ?>
+                <p style="color:var(--secondary);text-align:center;padding:30px;">No hay documentos aún.</p>
+            <?php else: ?>
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td><strong><?= e($doc['sequence_code'] ?? '-') ?></strong></td>
-                            <td>
-                                <span class="badge badge-<?= strtolower($doc['document_type'] ?? '') ?>">
-                                    <?= e($doc['document_type'] ?? '') ?>
-                                </span>
-                            </td>
-                            <td><?= e($doc['customer_name'] ?? 'Sin cliente') ?></td>
-                            <td><?= money((float) ($doc['total'] ?? 0)) ?></td>
-                            <td>
-                                <span class="status status-<?= strtolower($doc['status'] ?? 'draft') ?>">
-                                    <?= e($doc['status'] ?? '') ?>
-                                </span>
-                            </td>
-                            <td><?= e($doc['issue_date'] ?? '') ?></td>
+                            <th>Código</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th style="text-align:right;">Total</th>
+                            <th>Estado</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recentDocs as $doc): ?>
+                            <tr>
+                                <td><strong><?= e($doc['sequence_code'] ?? '-') ?></strong></td>
+                                <td><span
+                                        class="badge badge-<?= strtolower($doc['document_type'] ?? '') ?>"><?= e($doc['document_type'] ?? '') ?></span>
+                                </td>
+                                <td><?= e($doc['customer_name'] ?? '—') ?></td>
+                                <td style="text-align:right;"><?= money((float) ($doc['total'] ?? 0)) ?></td>
+                                <td><span
+                                        class="status status-<?= strtolower($doc['status'] ?? 'draft') ?>"><?= e($doc['status'] ?? '') ?></span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
     </div>
+
+    <!-- Alertas de Stock Bajo -->
+    <div class="card">
+        <div class="card-header">
+            <h2>⚠️ Stock Bajo</h2>
+            <a href="<?= url('products') ?>" style="font-size:13px;color:var(--primary);">Ver inventario →</a>
+        </div>
+        <div class="card-body">
+            <?php if (empty($lowStock)): ?>
+                <div style="text-align:center;padding:30px;color:var(--success);">
+                    <p style="font-size:24px;">✅</p>
+                    <p>Todo el inventario está en orden</p>
+                </div>
+            <?php else: ?>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <?php foreach ($lowStock as $p): ?>
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#fef2f2;border-radius:8px;">
+                            <div>
+                                <strong style="font-size:14px;"><?= e($p['name']) ?></strong>
+                                <span
+                                    style="font-size:12px;color:var(--secondary);display:block;"><?= e($p['sku'] ?? '') ?></span>
+                            </div>
+                            <span
+                                style="font-weight:700;color:<?= ((float) $p['stock'] <= 0) ? 'var(--danger)' : 'var(--warning)' ?>;font-size:16px;">
+                                <?= number_format((float) $p['stock'], 0) ?>
+                            </span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
 </div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+    // ── Tendencia de Ventas (Line Chart) ──
+    const trendLabels = <?= json_encode(array_column($trendData, 'label')) ?>;
+    const trendValues = <?= json_encode(array_column($trendData, 'value')) ?>;
+
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Ventas (DOP)',
+                data: trendValues,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.08)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2.5,
+                pointBackgroundColor: '#2563eb',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => 'DOP ' + ctx.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2 })
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: v => 'DOP ' + (v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v),
+                        font: { size: 11 }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                },
+                x: {
+                    ticks: { font: { size: 11 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // ── Top Clientes (Horizontal Bar Chart) ──
+    <?php if (!empty($topCustomers)): ?>
+        const topLabels = <?= json_encode(array_column($topCustomers, 'name')) ?>;
+        const topValues = <?= json_encode(array_map(fn($c) => (float) $c['revenue'], $topCustomers)) ?>;
+
+        new Chart(document.getElementById('topChart'), {
+            type: 'bar',
+            data: {
+                labels: topLabels,
+                datasets: [{
+                    label: 'Facturación (DOP)',
+                    data: topValues,
+                    backgroundColor: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'],
+                    borderRadius: 6,
+                    barThickness: 22,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => 'DOP ' + ctx.parsed.x.toLocaleString('en-US', { minimumFractionDigits: 2 })
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => (v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v),
+                            font: { size: 11 }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.04)' }
+                    },
+                    y: {
+                        ticks: { font: { size: 12 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    <?php endif; ?>
+</script>
 
 <?php \Core\View::endSection(); ?>

@@ -92,4 +92,20 @@ class SupplierController extends Controller
         flash('success', 'Proveedor eliminado.');
         redirect('suppliers');
     }
+
+    /**
+     * Perfil / Detalle del Proveedor.
+     */
+    public function show(string $id): void
+    {
+        $supplier = $this->db->fetch("SELECT * FROM suppliers WHERE id = :id", ['id' => (int) $id]);
+        if (!$supplier) {
+            flash('error', 'Proveedor no encontrado.');
+            redirect('suppliers');
+        }
+
+        View::module('CRM', 'suppliers/show', [
+            'supplier' => $supplier,
+        ]);
+    }
 }

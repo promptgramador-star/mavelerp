@@ -50,6 +50,7 @@
                                 <?= e($c['email'] ?: '—') ?>
                             </td>
                             <td>
+                                <a href="<?= url('customers/view/' . $c['id']) ?>" class="btn-action" title="Ver perfil">👁️</a>
                                 <a href="<?= url('customers/edit/' . $c['id']) ?>" class="btn-action" title="Editar">✏️</a>
                                 <form method="POST" action="<?= url('customers/delete/' . $c['id']) ?>" style="display:inline;"
                                     onsubmit="return confirm('¿Eliminar este cliente?')">

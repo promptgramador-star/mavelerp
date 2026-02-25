@@ -92,4 +92,37 @@ class CustomerController extends Controller
         flash('success', 'Cliente eliminado.');
         redirect('customers');
     }
+
+    /**
+     * Perfil / Detalle del Cliente con historial de documentos.
+     */
+    public function show(string $id): void
+    {
+        $customer = $this->db->fetch("SELECT * FROM customers WHERE id = :id", ['id' => (int) $id]);
+        if (!$customer) {
+            flash('error', 'Cliente no encontrado.');
+            redirect('customers');
+        }
+
+        $documents = $this->db->fetchAll(
+            "SELECT id, document_type, sequence_code, status, total, issue_date 
+             FROM documents WHERE customer_id = :id ORDER BY created_at DESC",
+            ['id' => (int) $id]
+        );
+
+        $totals = $this->db->fetch(
+            "SELECT 
+                COALESCE(SUM(CASE WHEN document_type = 'FAC' THEN total END), 0) as invoiced,
+                COALESCE(SUM(CASE WHEN document_type = 'COT' THEN total END), 0) as quoted,
+                COUNT(*) as doc_count
+             FROM documents WHERE customer_id = :id",
+            ['id' => (int) $id]
+        );
+
+        View::module('CRM', 'customers/show', [
+            'customer' => $customer,
+            'documents' => $documents,
+            'totals' => $totals,
+        ]);
+    }
 }
