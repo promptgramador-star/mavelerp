@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información Técnica - ERP Propietario</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .change-record {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border-left: 5px solid #3498db;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .date {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Registro de Cambios e Infraestructura ERP</h1>
+
+    <!-- Registro v0.1.0 -->
+    <div class="change-record" style="border-left-color: #27ae60;">
+        <h2><span class="label">Versión:</span> 0.1.0 (Arquitectura Base)</h2>
+        <p><span class="label">Fecha:</span> 2026-02-25</p>
+        <p><span class="label">Tipo:</span> Estructural / Core</p>
+        <p><span class="label">Descripción:</span> Implementación completa del Framework MVC modular (Router,
+            Controller, Model, View, DB Singleton, Session, Auth). Inclusión del modelo SQL base con 14 tablas
+            (incluyendo audit_log).
+        </p>
+        <p><span class="label">Impacto:</span> Global (Core del sistema)</p>
+        <ul>
+            <li>Estructura de carpetas modular lista.</li>
+            <li>Sistema de roles (SUPER_ADMIN, ADMIN, USER) funcional.</li>
+            <li>Instalador web automático para hosting compartido.</li>
+            <li>Lógica de conversión de Cotización a Factura implementada en módulo Facturación.</li>
+            <li>Diseño premium implementado con CSS moderno.</li>
+        </ul>
+        <p><span class="label">Pendiente Futuro:</span>
+        <ul>
+            <li>Desarrollo de interfaces de CRUD para Productos y Clientes.</li>
+            <li>Generación de PDFs para facturas fiscales.</li>
+            <li>Integración de reportes gráficos en Dashboard.</li>
+        </ul>
+        </p>
+    </div>
+
+    <!-- Registro Inicial -->
+
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+{
+    "name": "Facturacion",
+    "display_name": "Facturación y Ventas",
+    "version": "1.0.0",
+    "description": "Gestión de ciclo de ventas: Cotizaciones, Facturas y Conduces.",
+    "is_premium": false,
+    "icon": "facture-icon"
+}

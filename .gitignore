@@ -1,0 +1,18 @@
+# Configuración del ERP
+config/database.php
+config/installed.lock
+
+# Archivos de sesión y temporales
+storage/logs/*.log
+storage/cache/*
+storage/sessions/*
+
+# Archivos del Agente (opcional, si no quieres subirlos)
+agent/
+.gemini/
+
+# Otros
+.DS_Store
+Thumbs.db
+node_modules/
+.env
