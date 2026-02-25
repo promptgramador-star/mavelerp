@@ -83,17 +83,27 @@ class Router
             if (preg_match($route['pattern'], $url, $matches)) {
                 array_shift($matches); // Quitar el match completo
 
-                // Ejecutar middleware
-                foreach ($route['middleware'] as $mw) {
-                    $middlewareClass = $mw;
-                    if (class_exists($middlewareClass)) {
-                        $middlewareInstance = new $middlewareClass();
-                        $middlewareInstance->handle();
+                try {
+                    // Ejecutar middleware
+                    foreach ($route['middleware'] as $mw) {
+                        $middlewareClass = $mw;
+                        if (class_exists($middlewareClass)) {
+                            $middlewareInstance = new $middlewareClass();
+                            $middlewareInstance->handle();
+                        }
                     }
-                }
 
-                // Ejecutar acción
-                $this->executeAction($route['action'], $matches);
+                    // Ejecutar acción
+                    $this->executeAction($route['action'], $matches);
+                } catch (\Throwable $e) {
+                    http_response_code(500);
+                    echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Error</title></head><body>';
+                    echo '<h1>Error del Sistema</h1>';
+                    echo '<p><strong>' . htmlspecialchars($e->getMessage()) . '</strong></p>';
+                    echo '<p>Archivo: ' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p>';
+                    echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+                    echo '</body></html>';
+                }
                 return;
             }
         }
