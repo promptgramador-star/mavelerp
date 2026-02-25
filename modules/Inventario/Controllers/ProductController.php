@@ -108,12 +108,17 @@ class ProductController extends Controller
      */
     public function downloadTemplate(): void
     {
+        ob_clean();
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename=plantilla_productos.csv');
 
         $output = fopen('php://output', 'w');
-        // BOM para Excel en Windows
-        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        // Indicar a Excel que el separador es la coma
+        fwrite($output, "sep=,\n");
+
+        // BOM para Excel en Windows (UTF-8)
+        fwrite($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
         // Cabeceras
         fputcsv($output, ['nombre', 'sku', 'costo', 'precio', 'stock', 'es_servicio']);
@@ -147,8 +152,17 @@ class ProductController extends Controller
             redirect('products/import');
         }
 
-        // Leer cabeceras
-        $headers = fgetcsv($handle);
+        // Leer primera línea
+        $firstLine = fgets($handle);
+
+        // Si la primera línea es 'sep=', la saltamos y leemos la siguiente (cabeceras)
+        if (str_starts_with($firstLine, 'sep=')) {
+            $headers = fgetcsv($handle);
+        } else {
+            // Si no es sep=, rebobinar o tratar la primera línea como cabecera
+            rewind($handle);
+            $headers = fgetcsv($handle);
+        }
 
         $imported = 0;
         $errors = 0;
