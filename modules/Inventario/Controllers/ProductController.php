@@ -39,7 +39,8 @@ class ProductController extends Controller
         $this->validateCsrf();
 
         $this->db->insert(
-            "INSERT INTO products (name, sku, cost, price, stock, is_service) VALUES (:name, :sku, :cost, :price, :stock, :is_service)",
+            "INSERT INTO products (name, sku, cost, price, stock, is_service, is_taxable, created_at) 
+             VALUES (:name, :sku, :cost, :price, :stock, :is_service, :is_taxable, NOW())",
             [
                 'name' => trim($this->input('name', '')),
                 'sku' => trim($this->input('sku', '')),
@@ -47,6 +48,7 @@ class ProductController extends Controller
                 'price' => (float) $this->input('price', 0),
                 'stock' => (float) $this->input('stock', 0),
                 'is_service' => $this->input('is_service') ? 1 : 0,
+                'is_taxable' => $this->input('is_taxable') ? 1 : 0,
             ]
         );
 
@@ -71,7 +73,7 @@ class ProductController extends Controller
         $this->validateCsrf();
 
         $this->db->execute(
-            "UPDATE products SET name = :name, sku = :sku, cost = :cost, price = :price, stock = :stock, is_service = :is_service WHERE id = :id",
+            "UPDATE products SET name = :name, sku = :sku, cost = :cost, price = :price, stock = :stock, is_service = :is_service, is_taxable = :is_taxable WHERE id = :id",
             [
                 'id' => (int) $id,
                 'name' => trim($this->input('name', '')),
@@ -80,6 +82,7 @@ class ProductController extends Controller
                 'price' => (float) $this->input('price', 0),
                 'stock' => (float) $this->input('stock', 0),
                 'is_service' => $this->input('is_service') ? 1 : 0,
+                'is_taxable' => $this->input('is_taxable') ? 1 : 0,
             ]
         );
 
@@ -95,6 +98,27 @@ class ProductController extends Controller
         $this->db->execute("DELETE FROM products WHERE id = :id", ['id' => (int) $id]);
         flash('success', 'Producto eliminado.');
         redirect('products');
+    }
+
+    /**
+     * API para buscar productos por nombre o SKU (usado en buscadores dinámicos)
+     */
+    public function apiSearch(): void
+    {
+        $q = $this->query('q', '');
+        $limit = (int) $this->query('limit', '10');
+
+        $products = $this->db->fetchAll(
+            "SELECT id, name, sku, price, is_taxable, is_service 
+             FROM products 
+             WHERE name LIKE :q OR sku LIKE :q 
+             ORDER BY name LIMIT 15",
+            ['q' => "%{$q}%"]
+        );
+
+        header('Content-Type: application/json');
+        echo json_encode($products);
+        exit;
     }
 
     public function importForm(): void

@@ -45,10 +45,12 @@
                 <thead>
                     <tr>
                         <th style="width:40px;">#</th>
-                        <th>Producto (opcional)</th>
+                        <th style="width:250px;">Producto / SKU</th>
                         <th>Descripción</th>
-                        <th style="width:100px;">Cant.</th>
-                        <th style="width:130px;">Precio Unit.</th>
+                        <th style="width:80px;">Cant.</th>
+                        <th style="width:120px;">Precio Unit.</th>
+                        <th style="width:100px;">Desc. ($)</th>
+                        <th style="width:80px;">ITBIS</th>
                         <th style="width:130px;">Total</th>
                         <th style="width:40px;"></th>
                     </tr>
@@ -58,18 +60,27 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" style="text-align:right;font-weight:600;">Subtotal:</td>
-                        <td id="subtotalDisplay" style="font-weight:600;">DOP 0.00</td>
+                        <td colspan="7" style="text-align:right;padding:8px 20px;">Subtotal Bruto:</td>
+                        <td id="subtotalDisplay" style="text-align:right;padding:8px 20px;">DOP 0.00</td>
                         <td></td>
                     </tr>
                     <tr>
-                        <td colspan="5" style="text-align:right;font-weight:600;">ITBIS (18%):</td>
-                        <td id="taxDisplay" style="font-weight:600;">DOP 0.00</td>
+                        <td colspan="7" style="text-align:right;padding:8px 20px;color:var(--danger);">(-) Descuento
+                            Total:</td>
+                        <td id="discountDisplay" style="text-align:right;padding:8px 20px;color:var(--danger);">DOP 0.00
+                        </td>
                         <td></td>
                     </tr>
-                    <tr style="font-size:18px;">
-                        <td colspan="5" style="text-align:right;font-weight:700;">Total:</td>
-                        <td id="totalDisplay" style="font-weight:700;color:var(--primary);">DOP 0.00</td>
+                    <tr>
+                        <td colspan="7" style="text-align:right;padding:8px 20px;">ITBIS (18%) s/ Base:</td>
+                        <td id="taxDisplay" style="text-align:right;padding:8px 20px;">DOP 0.00</td>
+                        <td></td>
+                    </tr>
+                    <tr style="font-size:1.2rem;background:var(--bg-light);">
+                        <td colspan="7" style="text-align:right;padding:12px 20px;font-weight:700;">TOTAL FINAL:</td>
+                        <td id="totalDisplay"
+                            style="text-align:right;padding:12px 20px;font-weight:800;color:var(--primary);">DOP 0.00
+                        </td>
                         <td></td>
                     </tr>
                 </tfoot>
@@ -83,51 +94,142 @@
     </div>
 </form>
 
+<style>
+    .search-wrapper {
+        position: relative;
+    }
+
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-height: 250px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .search-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .search-item:hover {
+        background: #f8fafc;
+    }
+
+    .search-item .sku {
+        font-size: 11px;
+        color: var(--secondary);
+        background: #eee;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    .search-item .price {
+        font-weight: 600;
+        color: var(--primary);
+    }
+</style>
+
 <script>
-    const products = <?= json_encode($products) ?>;
     let lineCount = 0;
 
     function addLine() {
         lineCount++;
         const row = document.createElement('tr');
         row.id = 'line-' + lineCount;
-
-        let productOptions = '<option value="">—</option>';
-        products.forEach(p => {
-            productOptions += `<option value="${p.id}" data-price="${p.price}">${p.name}</option>`;
-        });
-
         row.innerHTML = `
         <td style="text-align:center;color:var(--secondary);">${lineCount}</td>
         <td>
-            <select name="item_product_id[]" onchange="selectProduct(this, ${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;">
-                ${productOptions}
-            </select>
+            <div class="search-wrapper">
+                <input type="text" placeholder="Buscar por nombre o SKU..." onkeyup="searchProduct(this, ${lineCount})" 
+                    style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;" autocomplete="off">
+                <div id="results-${lineCount}" class="search-results"></div>
+                <input type="hidden" name="item_product_id[]" id="prodId-${lineCount}">
+            </div>
         </td>
         <td><input type="text" name="item_description[]" id="desc-${lineCount}" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"></td>
-        <td><input type="number" name="item_quantity[]" id="qty-${lineCount}" value="1" step="0.01" min="0.01" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"></td>
-        <td><input type="number" name="item_price[]" id="price-${lineCount}" value="0" step="0.01" min="0" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"></td>
-        <td id="lineTotal-${lineCount}" style="padding-top:14px;font-weight:500;">DOP 0.00</td>
+        <td><input type="number" name="item_quantity[]" id="qty-${lineCount}" value="1" step="0.01" min="0.01" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;"></td>
+        <td><input type="number" name="item_price[]" id="price-${lineCount}" value="0" step="0.01" min="0" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:right;"></td>
+        <td><input type="number" name="item_discount[]" id="disc-${lineCount}" value="0" step="0.01" min="0" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:right;"></td>
+        <td style="text-align:center;">
+            <input type="checkbox" name="item_is_taxable[]" id="tax-${lineCount}" value="1" checked onchange="calcLine(${lineCount})">
+            <input type="hidden" name="item_is_taxable_hidden[]" value="1">
+        </td>
+        <td id="lineTotal-${lineCount}" style="text-align:right;font-weight:600;padding-right:20px;">DOP 0.00</td>
         <td><button type="button" onclick="removeLine(${lineCount})" style="background:none;border:none;cursor:pointer;font-size:16px;">❌</button></td>
     `;
-
         document.getElementById('itemsBody').appendChild(row);
     }
 
-    function selectProduct(select, line) {
-        const opt = select.options[select.selectedIndex];
-        const price = opt.dataset.price || 0;
-        const name = opt.text !== '—' ? opt.text : '';
-        document.getElementById('desc-' + line).value = name;
-        document.getElementById('price-' + line).value = price;
+    async function searchProduct(input, line) {
+        const query = input.value.trim();
+        const resultsDiv = document.getElementById('results-' + line);
+
+        if (query.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        try {
+            const resp = await fetch('<?= url("api/products/search") ?>?q=' + encodeURIComponent(query));
+            const products = await resp.json();
+
+            if (products.length === 0) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            resultsDiv.innerHTML = '';
+            products.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'search-item';
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight:500;">${p.name}</div>
+                        <span class="sku">${p.sku || 'S/N'}</span>
+                    </div>
+                    <div class="price">DOP ${parseFloat(p.price).toLocaleString()}</div>
+                `;
+                item.onclick = () => selectProduct(p, line);
+                resultsDiv.appendChild(item);
+            });
+            resultsDiv.style.display = 'block';
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function selectProduct(p, line) {
+        document.getElementById('prodId-' + line).value = p.id;
+        document.getElementById('desc-' + line).value = p.name;
+        document.getElementById('price-' + line).value = p.price;
+        document.getElementById('tax-' + line).checked = parseInt(p.is_taxable) === 1;
+
+        const wrapper = document.querySelector(`#line-${line} .search-wrapper input[type="text"]`);
+        wrapper.value = p.name + (p.sku ? ` (${p.sku})` : '');
+
+        document.getElementById('results-' + line).style.display = 'none';
         calcLine(line);
     }
 
     function calcLine(line) {
         const qty = parseFloat(document.getElementById('qty-' + line).value) || 0;
         const price = parseFloat(document.getElementById('price-' + line).value) || 0;
-        const total = qty * price;
-        document.getElementById('lineTotal-' + line).textContent = 'DOP ' + total.toFixed(2);
+        const disc = parseFloat(document.getElementById('disc-' + line).value) || 0;
+
+        const total = (qty * price) - disc;
+        document.getElementById('lineTotal-' + line).textContent = 'DOP ' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
         calcTotals();
     }
 
@@ -139,17 +241,41 @@
 
     function calcTotals() {
         let subtotal = 0;
-        document.querySelectorAll('[id^="lineTotal-"]').forEach(el => {
-            subtotal += parseFloat(el.textContent.replace('DOP ', '').replace(',', '')) || 0;
+        let totalDiscount = 0;
+        let taxableSubtotal = 0;
+
+        document.querySelectorAll('#itemsBody tr').forEach(row => {
+            const line = row.id.split('-')[1];
+            const qty = parseFloat(document.getElementById('qty-' + line).value) || 0;
+            const price = parseFloat(document.getElementById('price-' + line).value) || 0;
+            const disc = parseFloat(document.getElementById('disc-' + line).value) || 0;
+            const isTaxable = document.getElementById('tax-' + line).checked;
+
+            const lineSubtotal = qty * price;
+            subtotal += lineSubtotal;
+            totalDiscount += disc;
+
+            if (isTaxable) {
+                taxableSubtotal += (lineSubtotal - disc);
+            }
         });
-        const tax = subtotal * 0.18;
-        const total = subtotal + tax;
-        document.getElementById('subtotalDisplay').textContent = 'DOP ' + subtotal.toFixed(2);
-        document.getElementById('taxDisplay').textContent = 'DOP ' + tax.toFixed(2);
-        document.getElementById('totalDisplay').textContent = 'DOP ' + total.toFixed(2);
+
+        const tax = taxableSubtotal * 0.18;
+        const finalTotal = (subtotal - totalDiscount) + tax;
+
+        document.getElementById('subtotalDisplay').textContent = 'DOP ' + subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        document.getElementById('discountDisplay').textContent = 'DOP ' + totalDiscount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        document.getElementById('taxDisplay').textContent = 'DOP ' + tax.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        document.getElementById('totalDisplay').textContent = 'DOP ' + finalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // Agregar primera línea automáticamente
+    // Cerrar resultados al hacer clic fuera
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.search-wrapper')) {
+            document.querySelectorAll('.search-results').forEach(r => r.style.display = 'none');
+        }
+    });
+
     addLine();
 </script>
 

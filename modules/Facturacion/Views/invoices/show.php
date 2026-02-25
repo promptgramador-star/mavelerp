@@ -50,6 +50,7 @@
                     <th>Descripción</th>
                     <th style="text-align:right;">Cant.</th>
                     <th style="text-align:right;">P. Unit.</th>
+                    <th style="text-align:right;">Desc.</th>
                     <th style="text-align:right;">Total</th>
                 </tr>
             </thead>
@@ -68,6 +69,9 @@
                         <td style="text-align:right;">
                             <?= money((float) $item['unit_price']) ?>
                         </td>
+                        <td style="text-align:right;color:var(--danger);">
+                            <?= $item['discount_amount'] > 0 ? '-' . money((float) $item['discount_amount']) : '—' ?>
+                        </td>
                         <td style="text-align:right;font-weight:500;">
                             <?= money((float) $item['total']) ?>
                         </td>
@@ -76,18 +80,26 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4" style="text-align:right;font-weight:600;">Subtotal:</td>
+                    <td colspan="4" style="text-align:right;font-weight:600;">Subtotal Bruto:</td>
                     <td style="text-align:right;font-weight:600;">
                         <?= money((float) $doc['subtotal']) ?>
                     </td>
                 </tr>
+                <?php if ($doc['discount_total'] > 0): ?>
+                    <tr>
+                        <td colspan="4" style="text-align:right;font-weight:600;color:var(--danger);">Total Descuento:</td>
+                        <td style="text-align:right;font-weight:600;color:var(--danger);">
+                            - <?= money((float) $doc['discount_total']) ?>
+                        </td>
+                    </tr>
+                <?php endif; ?>
                 <tr>
                     <td colspan="4" style="text-align:right;font-weight:600;">ITBIS (18%):</td>
                     <td style="text-align:right;font-weight:600;">
                         <?= money((float) $doc['tax']) ?>
                     </td>
                 </tr>
-                <tr style="font-size:18px;">
+                <tr style="font-size:18px;background:var(--bg-light);">
                     <td colspan="4" style="text-align:right;font-weight:700;">Total:</td>
                     <td style="text-align:right;font-weight:700;color:var(--primary);">
                         <?= money((float) $doc['total']) ?>

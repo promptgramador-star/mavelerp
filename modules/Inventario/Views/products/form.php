@@ -43,11 +43,15 @@
                     <input type="number" id="stock" name="stock" step="0.01" min="0"
                         value="<?= e($product['stock'] ?? '0') ?>" id="stockField">
                 </div>
-                <div class="form-group" style="display:flex;align-items:center;padding-top:26px;">
+                <div class="form-group" style="display:flex;flex-direction:column;gap:15px;padding-top:10px;">
                     <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:0;">
-                        <input type="checkbox" name="is_service" value="1" <?= !empty($product['is_service']) ? 'checked' : '' ?> style="width:auto;" onchange="document.getElementById('stockField').disabled =
-                        this.checked;">
+                        <input type="checkbox" name="is_service" value="1" <?= !empty($product['is_service']) ? 'checked' : '' ?> style="width:auto;"
+                            onchange="const s = document.getElementById('stock'); if(s) s.disabled = this.checked;">
                         Es un servicio (sin stock)
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:0;">
+                        <input type="checkbox" name="is_taxable" value="1" <?= (!isset($product['is_taxable']) || $product['is_taxable']) ? 'checked' : '' ?> style="width:auto;">
+                        Aplica ITBIS (18%)
                     </label>
                 </div>
             </div>

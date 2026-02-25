@@ -15,3 +15,6 @@ $router->post('products/delete/{id}', 'Modules\\Inventario\\Controllers\\Product
 $router->get('products/import', 'Modules\\Inventario\\Controllers\\ProductController@importForm', ['App\\Middleware\\AuthMiddleware']);
 $router->post('products/import', 'Modules\\Inventario\\Controllers\\ProductController@importProcess', ['App\\Middleware\\AuthMiddleware']);
 $router->get('products/template', 'Modules\\Inventario\\Controllers\\ProductController@downloadTemplate', ['App\\Middleware\\AuthMiddleware']);
+
+// API
+$router->get('api/products/search', 'Modules\\Inventario\\Controllers\\ProductController@apiSearch', ['App\\Middleware\\AuthMiddleware']);

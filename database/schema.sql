@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS products (
     price DECIMAL(15,2) DEFAULT 0,
     stock DECIMAL(15,2) DEFAULT 0,
     is_service BOOLEAN DEFAULT FALSE,
+    is_taxable BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -105,6 +106,7 @@ CREATE TABLE IF NOT EXISTS documents (
     reference_document_id INT NULL,
     status ENUM('DRAFT','APPROVED','CANCELLED') DEFAULT 'DRAFT',
     subtotal DECIMAL(15,2) DEFAULT 0,
+    discount_total DECIMAL(15,2) DEFAULT 0,
     tax DECIMAL(15,2) DEFAULT 0,
     total DECIMAL(15,2) DEFAULT 0,
     issue_date DATE,
@@ -122,6 +124,8 @@ CREATE TABLE IF NOT EXISTS document_items (
     description TEXT,
     quantity DECIMAL(15,2),
     unit_price DECIMAL(15,2),
+    discount_amount DECIMAL(15,2) DEFAULT 0,
+    is_taxable BOOLEAN DEFAULT TRUE,
     total DECIMAL(15,2),
     FOREIGN KEY (document_id) REFERENCES documents(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
