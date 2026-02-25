@@ -129,7 +129,19 @@ class Router
      */
     private function getUrl(): string
     {
+        // 1. Intentar desde $_GET['url'] (poblado por .htaccess)
         $url = $_GET['url'] ?? '';
+
+        // 2. Si está vacío, intentar desde PATH_INFO o REQUEST_URI
+        if (empty($url)) {
+            $uri = $_SERVER['REQUEST_URI'] ?? '';
+            $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+
+            // Eliminar el nombre del script (index.php) y la base_url
+            $url = str_replace($scriptName, '', $uri);
+            $url = explode('?', $url)[0]; // Quitar query string
+        }
+
         return trim(filter_var($url, FILTER_SANITIZE_URL), '/');
     }
 

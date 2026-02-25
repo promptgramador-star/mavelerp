@@ -1,10 +1,15 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
+
+    # Evitar loops infinitos
+    RewriteCond %{REQUEST_URI} ^/index\.php$
+    RewriteRule ^(.*)$ - [L]
 
     # Redirigir todo al front controller (excepto archivos reales)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 </IfModule>
 
 # Proteger archivos sensibles
