@@ -36,19 +36,25 @@ class ModuleLoader
             $manifestPath = $moduleDir . '/module.json';
 
             if (!file_exists($manifestPath)) {
+                error_log("ModuleLoader: Manifest not found in $moduleDir");
                 continue;
             }
 
             $manifest = json_decode(file_get_contents($manifestPath), true);
 
             if (!$manifest || empty($manifest['name'])) {
+                error_log("ModuleLoader: Invalid manifest in $moduleDir");
                 continue;
             }
 
             // Verificar si el módulo tiene licencia activa
-            if ($this->isModuleEnabled($manifest['name'])) {
+            // Temporariamente forzar carga para depuración
+            if (true || $this->isModuleEnabled($manifest['name'])) {
+                error_log("ModuleLoader: Loading module " . $manifest['name']);
                 $this->activeModules[] = $manifest;
                 $this->loadModuleRoutes($moduleDir, $router);
+            } else {
+                error_log("ModuleLoader: Module " . $manifest['name'] . " is NOT enabled in DB");
             }
         }
     }
