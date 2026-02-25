@@ -27,34 +27,39 @@ class ModuleLoader
         $modulesDir = BASE_PATH . '/modules';
 
         if (!is_dir($modulesDir)) {
+            error_log("ModuleLoader: Directorio de módulos no encontrado: $modulesDir");
             return;
         }
 
-        $dirs = array_filter(glob($modulesDir . '/*'), 'is_dir');
+        $items = scandir($modulesDir);
 
-        foreach ($dirs as $moduleDir) {
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..')
+                continue;
+
+            $moduleDir = $modulesDir . '/' . $item;
+            if (!is_dir($moduleDir))
+                continue;
+
             $manifestPath = $moduleDir . '/module.json';
 
             if (!file_exists($manifestPath)) {
-                error_log("ModuleLoader: Manifest not found in $moduleDir");
+                error_log("ModuleLoader: Manifest no encontrado en $moduleDir");
                 continue;
             }
 
             $manifest = json_decode(file_get_contents($manifestPath), true);
 
             if (!$manifest || empty($manifest['name'])) {
-                error_log("ModuleLoader: Invalid manifest in $moduleDir");
+                error_log("ModuleLoader: Manifest inválido en $moduleDir");
                 continue;
             }
 
-            // Verificar si el módulo tiene licencia activa
-            // Temporariamente forzar carga para depuración
+            // Forzar carga para depuración (luego volver a isModuleEnabled)
             if (true || $this->isModuleEnabled($manifest['name'])) {
-                error_log("ModuleLoader: Loading module " . $manifest['name']);
+                error_log("ModuleLoader: Cargando rutas de " . $manifest['name']);
                 $this->activeModules[] = $manifest;
                 $this->loadModuleRoutes($moduleDir, $router);
-            } else {
-                error_log("ModuleLoader: Module " . $manifest['name'] . " is NOT enabled in DB");
             }
         }
     }
