@@ -1,6 +1,5 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
 
     # Redirigir todo al front controller (excepto archivos reales)
     RewriteCond %{REQUEST_FILENAME} !-f

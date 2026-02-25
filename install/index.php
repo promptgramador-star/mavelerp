@@ -60,14 +60,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->exec($seed);
 
             // 3. Guardar Settings
-            $stmt = $pdo->prepare("INSERT INTO settings (company_name, rnc, address, phone, email, currency) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT IGNORE INTO settings (company_name, rnc, address, phone, email, currency) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->execute([$company['company_name'], $company['rnc'], $company['address'], $company['phone'], $company['email'], 'DOP']);
 
             // 4. Crear SuperAdmin
-            $stmt = $pdo->prepare("INSERT INTO users (role_id, name, email, password, is_active) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT IGNORE INTO users (role_id, name, email, password, is_active) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([1, 'Administrador Maestro', $company['admin_email'], password_hash($company['admin_pass'], PASSWORD_BCRYPT), 1]);
 
-            // 5. Generar config/database.php
+            // 5. Calcular base_url automáticamente
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+            $host = $_SERVER['HTTP_HOST'];
+            $scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+            $baseDir = rtrim(dirname($scriptPath), '/');
+            $baseUrl = $protocol . "://" . $host . $baseDir . "/";
+
+            // 6. Generar config/database.php
             $dbTemplate = "<?php\nreturn " . var_export([
                 'driver' => 'mysql',
                 'host' => $db['host'],
@@ -80,7 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ], true) . ";";
             file_put_contents(BASE_PATH . '/config/database.php', $dbTemplate);
 
-            // 6. Crear lock file
+            // 7. Actualizar config/app.php con la base_url détectada
+            $appConfig = require BASE_PATH . '/config/app.php';
+            $appConfig['base_url'] = $baseUrl;
+            $appTemplate = "<?php\nreturn " . var_export($appConfig, true) . ";";
+            file_put_contents(BASE_PATH . '/config/app.php', $appTemplate);
+
+            // 8. Crear lock file
             file_put_contents(BASE_PATH . '/config/installed.lock', date('Y-m-d H:i:s'));
 
             header('Location: index.php?step=5');
