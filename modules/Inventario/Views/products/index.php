@@ -5,7 +5,10 @@
         <h1>Productos y Servicios</h1>
         <p>Catálogo de la empresa</p>
     </div>
-    <a href="<?= url('products/create') ?>" class="btn btn-primary">+ Nuevo Producto</a>
+    <div style="display:flex;gap:10px;">
+        <a href="<?= url('products/import') ?>" class="btn">📥 Importar</a>
+        <a href="<?= url('products/create') ?>" class="btn btn-primary">+ Nuevo Producto</a>
+    </div>
 </div>
 
 <div class="card" style="margin-bottom:20px;">
