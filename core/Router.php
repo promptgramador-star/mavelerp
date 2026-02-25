@@ -160,6 +160,6 @@ class Router
         return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>404</title>
         <style>body{font-family:system-ui;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#f0f2f5;color:#333;}
         .box{text-align:center;}.box h1{font-size:72px;margin:0;color:#3498db;}.box p{font-size:18px;color:#7f8c8d;}</style></head>
-        <body><div class="box"><h1>404</h1><p>Página no encontrada: <strong>' . e($this->getUrl()) . '</strong></p></div></body></html>';
+        <body><div class="box"><h1>404</h1><p>Página no encontrada</p></div></body></html>';
     }
 }

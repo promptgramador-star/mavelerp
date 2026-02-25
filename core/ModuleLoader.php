@@ -27,7 +27,6 @@ class ModuleLoader
         $modulesDir = BASE_PATH . '/modules';
 
         if (!is_dir($modulesDir)) {
-            error_log("ModuleLoader: Directorio de módulos no encontrado: $modulesDir");
             return;
         }
 
@@ -44,20 +43,17 @@ class ModuleLoader
             $manifestPath = $moduleDir . '/module.json';
 
             if (!file_exists($manifestPath)) {
-                error_log("ModuleLoader: Manifest no encontrado en $moduleDir");
                 continue;
             }
 
             $manifest = json_decode(file_get_contents($manifestPath), true);
 
             if (!$manifest || empty($manifest['name'])) {
-                error_log("ModuleLoader: Manifest inválido en $moduleDir");
                 continue;
             }
 
-            // Forzar carga para depuración (luego volver a isModuleEnabled)
-            if (true || $this->isModuleEnabled($manifest['name'])) {
-                error_log("ModuleLoader: Cargando rutas de " . $manifest['name']);
+            // Verificar si el módulo tiene licencia activa
+            if ($this->isModuleEnabled($manifest['name'])) {
                 $this->activeModules[] = $manifest;
                 $this->loadModuleRoutes($moduleDir, $router);
             }
