@@ -50,6 +50,33 @@
 <body>
     <h1>Registro de Cambios e Infraestructura ERP</h1>
 
+    <!-- Registro v0.5.0 -->
+    <div class="change-record" style="border-left-color: #2ecc71;">
+        <h2><span class="label">Versión:</span> 0.5.0 (Identidad Corporativa y Ciclo de Vida)</h2>
+        <p><span class="label">Fecha:</span> 2026-02-26</p>
+        <p><span class="label">Tipo:</span> UX / Identidad / Control</p>
+        <p><span class="label">Descripción:</span> Implementación de carga de logo corporativo, rediseño de documentos
+            para impresión profesional (A4) y gestión completa del estado de facturas con permisos de reversión.</p>
+        <p><span class="label">Impacto:</span> Facturación, Configuración y Core</p>
+        <ul>
+            <li><strong>Logo Corporativo:</strong> Opción en Configuración para subir el logo de la empresa, persistente
+                en todas las vistas de detalle e impresión.</li>
+            <li><strong>Formato A4 Profesional:</strong> Rediseño de `show.php` y `print.php` para Facturas y
+                Cotizaciones, ahora visualmente idénticos a un documento PDF profesional con optimización de color para
+                impresoras.</li>
+            <li><strong>Ciclo de Vida de Factura:</strong> Flujo DRAFT (Borrador) → SENT (Enviada) → PAID (Pagada).</li>
+            <li><strong>Seguridad de Pagos:</strong> Solo usuarios SUPER_ADMIN pueden revertir el estado de una factura
+                pagada para corrección de errores humanos.</li>
+            <li><strong>Estado en Español:</strong> Etiquetas de estado localizadas (PAGADA, ENVIADA, ANULADA) con
+                indicadores visuales de color.</li>
+        </ul>
+        <p><span class="label">Próximos Pasos:</span></p>
+        <ul>
+            <li>Implementar órdenes de compra (Purchase Orders) con formato <strong>PO26-00001</strong>.</li>
+            <li>Seguimiento de saldos pendientes por cliente.</li>
+        </ul>
+    </div>
+
     <!-- Registro v0.4.0 -->
     <div class="change-record" style="border-left-color: #f39c12;">
         <h2><span class="label">Versión:</span> 0.4.0 (Facturación Avanzada y Multi-Moneda)</h2>
