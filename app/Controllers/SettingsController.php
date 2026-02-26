@@ -45,24 +45,47 @@ class SettingsController extends Controller
 
         // Handle logo upload
         if (!empty($_FILES['logo']['tmp_name']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-            $allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
-            $mime = mime_content_type($_FILES['logo']['tmp_name']);
+            $allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
+            $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
 
-            if (in_array($mime, $allowed)) {
-                $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
-                $filename = 'company_logo.' . strtolower($ext);
-                $dest = BASE_PATH . '/uploads/logo/' . $filename;
-
-                // Remove old logos
-                $oldFiles = glob(BASE_PATH . '/uploads/logo/company_logo.*');
-                foreach ($oldFiles as $old) {
-                    @unlink($old);
-                }
-
-                if (move_uploaded_file($_FILES['logo']['tmp_name'], $dest)) {
-                    $data['logo'] = 'uploads/logo/' . $filename;
-                }
+            $mime = 'unknown';
+            if (function_exists('mime_content_type')) {
+                $mime = mime_content_type($_FILES['logo']['tmp_name']);
+            } else {
+                $imgInfo = @getimagesize($_FILES['logo']['tmp_name']);
+                if ($imgInfo)
+                    $mime = $imgInfo['mime'];
             }
+
+            $ext = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+
+            if (in_array($mime, $allowedTypes) || in_array($ext, $allowedExtensions)) {
+                $destDir = BASE_PATH . '/uploads/logo';
+                $filename = 'company_logo.' . $ext;
+                $destFile = $destDir . '/' . $filename;
+
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0755, true);
+                }
+
+                // Clear old logos
+                $oldFiles = glob($destDir . '/company_logo.*');
+                if ($oldFiles) {
+                    foreach ($oldFiles as $old) {
+                        @unlink($old);
+                    }
+                }
+
+                if (move_uploaded_file($_FILES['logo']['tmp_name'], $destFile)) {
+                    $data['logo'] = 'uploads/logo/' . $filename;
+                } else {
+                    flash('error', 'Error: No se pudo mover el archivo. Verifique permisos de: ' . $destDir);
+                }
+            } else {
+                flash('error', 'Formato no permitido: ' . $mime . ' (Ext: ' . $ext . ')');
+            }
+        } elseif (isset($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) {
+            flash('error', 'Error en la subida: ' . $_FILES['logo']['error']);
         }
 
         $existing = $this->db->fetch("SELECT id FROM settings LIMIT 1");
