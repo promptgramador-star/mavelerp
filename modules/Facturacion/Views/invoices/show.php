@@ -15,6 +15,12 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
     </div>
     <div style="display:flex;gap:10px;">
         <?php if ($doc['status'] === 'DRAFT'): ?>
+            <form method="POST" action="<?= url('invoices/approve/' . $doc['id']) ?>" style="display:inline;">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn" style="background:var(--primary);color:#fff;">✅ Validar y Enviar</button>
+            </form>
+        <?php endif; ?>
+        <?php if ($doc['status'] === 'DRAFT' || $doc['status'] === 'SENT'): ?>
             <form method="POST" action="<?= url('invoices/pay/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--success);color:#fff;"

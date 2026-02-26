@@ -428,7 +428,7 @@ class FacturacionController extends Controller
         $this->validateCsrf();
 
         $this->db->execute(
-            "UPDATE documents SET status = 'PAID' WHERE id = :id AND document_type = 'FAC' AND status = 'DRAFT'",
+            "UPDATE documents SET status = 'PAID' WHERE id = :id AND document_type = 'FAC' AND status IN ('DRAFT', 'SENT')",
             ['id' => (int) $id]
         );
 
@@ -492,5 +492,21 @@ class FacturacionController extends Controller
         }
 
         redirect('quotations/view/' . $id);
+    }
+    /**
+     * Aprobar/Enviar Factura.
+     */
+    public function approveInvoice(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        $this->db->execute(
+            "UPDATE documents SET status = 'SENT' WHERE id = :id AND document_type = 'FAC' AND status = 'DRAFT'",
+            ['id' => (int) $id]
+        );
+
+        flash('success', 'Factura aprobada y marcada como enviada.');
+        redirect('invoices/view/' . $id);
     }
 }

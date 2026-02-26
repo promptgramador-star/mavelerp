@@ -280,7 +280,11 @@ body {
     margin-right: 8px;
 }
 
-.status-approved::before {
+.status-approved::before, .status-sent::before {
+    background: #3b82f6; /* Blue for sent/approved */
+}
+
+.status-paid::before {
     background: var(--success);
 }
 
