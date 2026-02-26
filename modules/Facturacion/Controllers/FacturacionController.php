@@ -494,6 +494,29 @@ class FacturacionController extends Controller
         redirect('quotations/view/' . $id);
     }
     /**
+     * Revertir Pago (Solo Super Admin).
+     */
+    public function unpayInvoice(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        if (!\Core\Auth::isSuperAdmin()) {
+            flash('error', 'Solo un Super Admin puede revertir pagos.');
+            redirect('invoices/view/' . $id);
+            return;
+        }
+
+        $this->db->execute(
+            "UPDATE documents SET status = 'SENT' WHERE id = :id AND document_type = 'FAC' AND status = 'PAID'",
+            ['id' => (int) $id]
+        );
+
+        flash('success', 'Pago revertido correctamente.');
+        redirect('invoices/view/' . $id);
+    }
+
+    /**
      * Aprobar/Enviar Factura.
      */
     public function approveInvoice(string $id): void

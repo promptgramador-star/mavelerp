@@ -16,6 +16,7 @@ $router->post('quotations/convert/{id}', 'Modules\\Facturacion\\Controllers\\Fac
 $router->get('invoices', 'Modules\\Facturacion\\Controllers\\FacturacionController@invoices', ['App\\Middleware\\AuthMiddleware']);
 $router->get('invoices/view/{id}', 'Modules\\Facturacion\\Controllers\\FacturacionController@showInvoice', ['App\\Middleware\\AuthMiddleware']);
 $router->post('invoices/pay/{id}', 'Modules\\Facturacion\\Controllers\\FacturacionController@markPaid', ['App\\Middleware\\AuthMiddleware']);
+$router->post('invoices/unpay/{id}', 'Modules\\Facturacion\\Controllers\\FacturacionController@unpayInvoice', ['App\\Middleware\\AuthMiddleware']);
 $router->post('invoices/approve/{id}', 'Modules\\Facturacion\\Controllers\\FacturacionController@approveInvoice', ['App\\Middleware\\AuthMiddleware']);
 $router->post('invoices/cancel/{id}', 'Modules\\Facturacion\\Controllers\\FacturacionController@cancelInvoice', ['App\\Middleware\\AuthMiddleware']);
 $router->get('invoices/print/{id}', 'Modules\\Facturacion\\Controllers\\FacturacionController@printInvoice', ['App\\Middleware\\AuthMiddleware']);

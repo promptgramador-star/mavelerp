@@ -17,7 +17,7 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
         <?php $st = trim($doc['status'] ?? 'DRAFT'); ?>
 
         <?php if ($st === 'DRAFT'): ?>
-            <!-- DRAFT: Aprobar, Pagar, Anular -->
+            <!-- Borrador: Validar, Pagar, Anular -->
             <form method="POST" action="<?= url('invoices/approve/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--primary);color:#fff;">✅ Validar y Enviar</button>
@@ -25,19 +25,19 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
             <form method="POST" action="<?= url('invoices/pay/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--success);color:#fff;"
-                    onclick="return confirm('¿Marcar esta factura como pagada directamente?')">💰 Marcar Pagada</button>
+                    onclick="return confirm('¿Marcar factura como pagada?')">💰 Marcar Pagada</button>
             </form>
             <form method="POST" action="<?= url('invoices/cancel/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--danger);color:#fff;"
                     onclick="return confirm('¿Anular esta factura?')">❌ Anular</button>
             </form>
-        <?php elseif ($st === 'SENT' || $st === 'APPROVED'): ?>
-            <!-- SENT/APPROVED: Pagar, Anular -->
+        <?php elseif ($st === 'SENT'): ?>
+            <!-- Enviada: Pagar, Anular -->
             <form method="POST" action="<?= url('invoices/pay/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--success);color:#fff;"
-                    onclick="return confirm('¿Marcar esta factura como pagada?')">💰 Marcar Pagada</button>
+                    onclick="return confirm('¿Marcar factura como pagada?')">💰 Marcar Pagada</button>
             </form>
             <form method="POST" action="<?= url('invoices/cancel/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
@@ -45,7 +45,15 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
                     onclick="return confirm('¿Anular esta factura?')">❌ Anular</button>
             </form>
         <?php elseif ($st === 'PAID'): ?>
+            <!-- Pagada: Solo Super Admin puede revertir -->
             <span class="btn" style="background:var(--success);color:#fff;cursor:default;">✅ Pagada</span>
+            <?php if (\Core\Auth::isSuperAdmin()): ?>
+                <form method="POST" action="<?= url('invoices/unpay/' . $doc['id']) ?>" style="display:inline;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn" style="background:#4b5563;color:#fff;"
+                        onclick="return confirm('¿Revertir el pago de esta factura?')">🔄 Revertir Pago</button>
+                </form>
+            <?php endif; ?>
         <?php elseif ($st === 'CANCELLED'): ?>
             <span class="btn" style="background:var(--danger);color:#fff;cursor:default;">❌ Anulada</span>
         <?php endif; ?>
