@@ -50,6 +50,35 @@
 <body>
     <h1>Registro de Cambios e Infraestructura ERP</h1>
 
+    <!-- Registro v0.4.0 -->
+    <div class="change-record" style="border-left-color: #f39c12;">
+        <h2><span class="label">Versión:</span> 0.4.0 (Facturación Avanzada y Multi-Moneda)</h2>
+        <p><span class="label">Fecha:</span> 2026-02-25</p>
+        <p><span class="label">Tipo:</span> Funcional / Finanzas</p>
+        <p><span class="label">Descripción:</span> Refinamiento del módulo de facturación con soporte para múltiples
+            monedas, descuentos porcentuales por línea, exención de impuestos por ítem y opciones de impresión.</p>
+        <p><span class="label">Impacto:</span> Módulo de Facturación y Configuración</p>
+        <ul>
+            <li>Soporte Multi-Moneda: Configuración de múltiples monedas (DOP, USD, EUR) y selección dinámica al crear
+                documentos.</li>
+            <li>Descuentos porcentuales por ítem con cálculo automático.</li>
+            <li>Control de exención de ITBIS por producto y por línea de factura.</li>
+            <li>Inclusión de cuentas bancarias en la configuración, visibles en el pie de página de facturas y
+                cotizaciones.</li>
+            <li>Botón de impresión optimizado (oculta UI y formatea para papel).</li>
+            <li>Búsqueda dinámica de productos (AJAX) en la creación de cotizaciones con autocompletado de SKU y precio.
+            </li>
+        </ul>
+        <p><span class="label">Próximos Pasos (Apuntes del Usuario):</span></p>
+        <ul>
+            <li>Trabajar en el cálculo de los ítems a facturar.</li>
+            <li>Diseñar y ajustar el formato visual de la factura.</li>
+            <li>Agregar el logo de la empresa para el formato de dicha factura.</li>
+            <li>Enfoque global en todo lo relacionado a cotizar y facturar (gestionar el estado de la factura, revertir
+                cambios, etc.).</li>
+        </ul>
+    </div>
+
     <!-- Registro v0.3.0 -->
     <div class="change-record" style="border-left-color: #8e44ad;">
         <h2><span class="label">Versión:</span> 0.3.0 (Dashboard + CRM Completo)</h2>

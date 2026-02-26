@@ -7,7 +7,7 @@
 
 <div class="card">
     <div class="card-body">
-        <form method="POST" action="<?= url('settings') ?>">
+        <form method="POST" action="<?= url('settings') ?>" enctype="multipart/form-data">
             <?= csrf_field() ?>
 
             <div class="form-row">
@@ -39,6 +39,31 @@
                 </div>
             </div>
 
+            <!-- Logo Upload -->
+            <div class="form-group">
+                <label>Logo de la Empresa</label>
+                <div style="display:flex;align-items:center;gap:20px;margin-top:8px;">
+                    <?php if (!empty($settings['logo'])): ?>
+                        <div style="border:2px dashed var(--border);border-radius:8px;padding:10px;background:#fafafa;">
+                            <img src="<?= url($settings['logo']) ?>" alt="Logo"
+                                style="max-height:80px;max-width:200px;display:block;">
+                        </div>
+                    <?php else: ?>
+                        <div
+                            style="border:2px dashed var(--border);border-radius:8px;padding:20px 30px;background:#fafafa;color:var(--secondary);font-size:13px;">
+                            Sin logo
+                        </div>
+                    <?php endif; ?>
+                    <div>
+                        <input type="file" name="logo" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+                            style="font-size:14px;">
+                        <br>
+                        <small style="color:var(--secondary);">PNG, JPG, SVG o WebP. Aparecerá en facturas y
+                            cotizaciones.</small>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="bank_accounts">Cuentas Bancarias (Visible en facturas)</label>
                 <textarea id="bank_accounts" name="bank_accounts" rows="3"
@@ -50,9 +75,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Monedas Habilitadas (Facturación)</label>
-                    <?php
-                    $currencies = explode(',', $settings['currency'] ?? 'DOP');
-                    ?>
+                    <?php $currencies = explode(',', $settings['currency'] ?? 'DOP'); ?>
                     <div style="display:flex;gap:15px;margin-top:8px;">
                         <label><input type="checkbox" name="currency[]" value="DOP" <?= in_array('DOP', $currencies) ? 'checked' : '' ?>> DOP - Peso Dominicano</label>
                         <label><input type="checkbox" name="currency[]" value="USD" <?= in_array('USD', $currencies) ? 'checked' : '' ?>> USD - Dólar</label>

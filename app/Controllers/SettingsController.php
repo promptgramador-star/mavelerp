@@ -43,15 +43,39 @@ class SettingsController extends Controller
             'fiscal_year_start' => $this->input('fiscal_year_start'),
         ];
 
+        // Handle logo upload
+        if (!empty($_FILES['logo']['tmp_name']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+            $allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
+            $mime = mime_content_type($_FILES['logo']['tmp_name']);
+
+            if (in_array($mime, $allowed)) {
+                $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+                $filename = 'company_logo.' . strtolower($ext);
+                $dest = BASE_PATH . '/uploads/logo/' . $filename;
+
+                // Remove old logos
+                $oldFiles = glob(BASE_PATH . '/uploads/logo/company_logo.*');
+                foreach ($oldFiles as $old) {
+                    @unlink($old);
+                }
+
+                if (move_uploaded_file($_FILES['logo']['tmp_name'], $dest)) {
+                    $data['logo'] = 'uploads/logo/' . $filename;
+                }
+            }
+        }
+
         $existing = $this->db->fetch("SELECT id FROM settings LIMIT 1");
 
         if ($existing) {
+            $setClauses = [];
+            foreach (array_keys($data) as $key) {
+                $setClauses[] = "{$key} = :{$key}";
+            }
+            $setString = implode(', ', $setClauses);
+
             $this->db->execute(
-                "UPDATE settings SET company_name = :company_name, rnc = :rnc, 
-                 address = :address, phone = :phone, email = :email, 
-                 bank_accounts = :bank_accounts, 
-                 currency = :currency, fiscal_year_start = :fiscal_year_start 
-                 WHERE id = :id",
+                "UPDATE settings SET {$setString} WHERE id = :id",
                 array_merge($data, ['id' => $existing['id']])
             );
         } else {

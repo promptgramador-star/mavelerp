@@ -370,4 +370,127 @@ class FacturacionController extends Controller
             'refDoc' => $refDoc,
         ]);
     }
+
+    /**
+     * Imprimir Factura (vista limpia sin layout).
+     */
+    public function printInvoice(string $id): void
+    {
+        $doc = $this->db->fetch(
+            "SELECT d.*, c.name as customer_name, c.rnc as customer_rnc, c.address as customer_address 
+             FROM documents d LEFT JOIN customers c ON d.customer_id = c.id WHERE d.id = :id",
+            ['id' => (int) $id]
+        );
+
+        $items = $this->db->fetchAll(
+            "SELECT di.*, p.name as product_name FROM document_items di 
+             LEFT JOIN products p ON di.product_id = p.id 
+             WHERE di.document_id = :id ORDER BY di.line_number",
+            ['id' => (int) $id]
+        );
+
+        View::module('Facturacion', 'invoices/print', [
+            'doc' => $doc,
+            'items' => $items,
+        ], null);
+    }
+
+    /**
+     * Imprimir Cotización (vista limpia sin layout).
+     */
+    public function printQuotation(string $id): void
+    {
+        $doc = $this->db->fetch(
+            "SELECT d.*, c.name as customer_name, c.rnc as customer_rnc, c.address as customer_address 
+             FROM documents d LEFT JOIN customers c ON d.customer_id = c.id WHERE d.id = :id",
+            ['id' => (int) $id]
+        );
+
+        $items = $this->db->fetchAll(
+            "SELECT di.*, p.name as product_name FROM document_items di 
+             LEFT JOIN products p ON di.product_id = p.id 
+             WHERE di.document_id = :id ORDER BY di.line_number",
+            ['id' => (int) $id]
+        );
+
+        View::module('Facturacion', 'quotations/print', [
+            'doc' => $doc,
+            'items' => $items,
+        ], null);
+    }
+
+    /**
+     * Marcar Factura como Pagada.
+     */
+    public function markPaid(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        $this->db->execute(
+            "UPDATE documents SET status = 'PAID' WHERE id = :id AND document_type = 'FAC' AND status = 'DRAFT'",
+            ['id' => (int) $id]
+        );
+
+        flash('success', 'Factura marcada como pagada.');
+        redirect('invoices/view/' . $id);
+    }
+
+    /**
+     * Anular Factura.
+     */
+    public function cancelInvoice(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        $doc = $this->db->fetch(
+            "SELECT status FROM documents WHERE id = :id AND document_type = 'FAC'",
+            ['id' => (int) $id]
+        );
+
+        if ($doc && $doc['status'] !== 'PAID') {
+            $this->db->execute(
+                "UPDATE documents SET status = 'CANCELLED' WHERE id = :id",
+                ['id' => (int) $id]
+            );
+            flash('success', 'Factura anulada.');
+        } else {
+            flash('error', 'No se puede anular una factura pagada.');
+        }
+
+        redirect('invoices/view/' . $id);
+    }
+
+    /**
+     * Anular Cotización.
+     */
+    public function cancelQuotation(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        $doc = $this->db->fetch(
+            "SELECT status FROM documents WHERE id = :id AND document_type = 'COT'",
+            ['id' => (int) $id]
+        );
+
+        // Only cancel if not already converted to invoice
+        $hasInvoice = $this->db->fetch(
+            "SELECT id FROM documents WHERE reference_document_id = :id AND document_type = 'FAC'",
+            ['id' => (int) $id]
+        );
+
+        if ($hasInvoice) {
+            flash('error', 'No se puede anular una cotización que ya fue convertida a factura.');
+        } elseif ($doc && $doc['status'] !== 'CANCELLED') {
+            $this->db->execute(
+                "UPDATE documents SET status = 'CANCELLED' WHERE id = :id",
+                ['id' => (int) $id]
+            );
+            flash('success', 'Cotización anulada.');
+        }
+
+        redirect('quotations/view/' . $id);
+    }
 }
