@@ -14,26 +14,42 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
         </p>
     </div>
     <div style="display:flex;gap:10px;">
-        <?php if ($doc['status'] === 'DRAFT'): ?>
+        <?php $st = trim($doc['status'] ?? 'DRAFT'); ?>
+
+        <?php if ($st === 'DRAFT'): ?>
+            <!-- DRAFT: Aprobar, Pagar, Anular -->
             <form method="POST" action="<?= url('invoices/approve/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--primary);color:#fff;">✅ Validar y Enviar</button>
             </form>
-        <?php endif; ?>
-        <?php if ($doc['status'] === 'DRAFT' || $doc['status'] === 'SENT'): ?>
+            <form method="POST" action="<?= url('invoices/pay/' . $doc['id']) ?>" style="display:inline;">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn" style="background:var(--success);color:#fff;"
+                    onclick="return confirm('¿Marcar esta factura como pagada directamente?')">💰 Marcar Pagada</button>
+            </form>
+            <form method="POST" action="<?= url('invoices/cancel/' . $doc['id']) ?>" style="display:inline;">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn" style="background:var(--danger);color:#fff;"
+                    onclick="return confirm('¿Anular esta factura?')">❌ Anular</button>
+            </form>
+        <?php elseif ($st === 'SENT' || $st === 'APPROVED'): ?>
+            <!-- SENT/APPROVED: Pagar, Anular -->
             <form method="POST" action="<?= url('invoices/pay/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--success);color:#fff;"
                     onclick="return confirm('¿Marcar esta factura como pagada?')">💰 Marcar Pagada</button>
             </form>
-        <?php endif; ?>
-        <?php if ($doc['status'] !== 'PAID' && $doc['status'] !== 'CANCELLED'): ?>
             <form method="POST" action="<?= url('invoices/cancel/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--danger);color:#fff;"
-                    onclick="return confirm('¿Anular esta factura? Esta acción no se puede revertir.')">❌ Anular</button>
+                    onclick="return confirm('¿Anular esta factura?')">❌ Anular</button>
             </form>
+        <?php elseif ($st === 'PAID'): ?>
+            <span class="btn" style="background:var(--success);color:#fff;cursor:default;">✅ Pagada</span>
+        <?php elseif ($st === 'CANCELLED'): ?>
+            <span class="btn" style="background:var(--danger);color:#fff;cursor:default;">❌ Anulada</span>
         <?php endif; ?>
+
         <a href="<?= url('invoices/print/' . $doc['id']) ?>" target="_blank" class="btn"
             style="background:#4b5563;color:#fff;">🖨️ Imprimir</a>
         <a href="<?= url('invoices') ?>" class="btn" style="background:var(--border);color:var(--dark);">← Volver</a>
