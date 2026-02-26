@@ -126,7 +126,19 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
                 </tr>
                 <tr>
                     <td class="doc-info-label">Estado:</td>
-                    <td><span class="status status-<?= strtolower($doc['status']) ?>"><?= e($doc['status']) ?></span>
+                    <td>
+                        <span class="status status-<?= strtolower($st) ?>">
+                            <?php 
+                            $labels = [
+                                'DRAFT' => 'BORRADOR',
+                                'SENT' => 'ENVIADA',
+                                'PAID' => 'PAGADA',
+                                'CANCELLED' => 'ANULADA',
+                                'APPROVED' => 'APROBADA'
+                            ];
+                            echo $labels[$st] ?? $st;
+                            ?>
+                        </span>
                     </td>
                 </tr>
             </table>
