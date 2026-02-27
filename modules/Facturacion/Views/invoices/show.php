@@ -128,7 +128,7 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
                     <td class="doc-info-label">Estado:</td>
                     <td>
                         <span class="status status-<?= strtolower($st) ?>">
-                            <?php 
+                            <?php
                             $labels = [
                                 'DRAFT' => 'BORRADOR',
                                 'SENT' => 'ENVIADA',
@@ -141,6 +141,12 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
                         </span>
                     </td>
                 </tr>
+                <?php if (!empty($doc['ncf'])): ?>
+                    <tr>
+                        <td class="doc-info-label">NCF:</td>
+                        <td><b><?= e($doc['ncf']) ?></b></td>
+                    </tr>
+                <?php endif; ?>
             </table>
         </div>
     </div>
@@ -184,6 +190,10 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
                     <?php if (($doc['tax'] ?? 0) > 0): ?>
                         <th style="text-align:right;">ITBIS (18%)</th>
                     <?php endif; ?>
+                    <?php if (($doc['retention_amount'] ?? 0) > 0): ?>
+                        <th style="text-align:right;">Retención
+                            (<?= number_format((float) $doc['retention_percentage'], 2) ?>%)</th>
+                    <?php endif; ?>
                     <th style="text-align:right;">Total</th>
                 </tr>
             </thead>
@@ -197,6 +207,10 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
                     <?php endif; ?>
                     <?php if (($doc['tax'] ?? 0) > 0): ?>
                         <td style="text-align:right;"><?= number_format((float) $doc['tax'], 2) ?></td>
+                    <?php endif; ?>
+                    <?php if (($doc['retention_amount'] ?? 0) > 0): ?>
+                        <td style="text-align:right;color:#dc2626;">
+                            -<?= number_format((float) $doc['retention_amount'], 2) ?></td>
                     <?php endif; ?>
                     <td style="text-align:right;font-weight:700;"><?= number_format((float) $doc['total'], 2) ?></td>
                 </tr>

@@ -12,52 +12,76 @@
 
 <body>
     <?php if (\Core\Auth::check()): ?>
-        <!-- Sidebar / Navegación -->
+        <!-- Navbar / Navegación -->
         <div class="app-layout">
-            <nav class="sidebar">
-                <div class="sidebar-header">
-                    <h2 class="sidebar-brand">ERP<span>RD</span></h2>
+            <header class="top-navbar">
+                <div class="navbar-brand">
+                    <a href="<?= url('dashboard') ?>">ERP<span>RD</span></a>
                 </div>
-                <ul class="sidebar-nav">
-                    <li><a href="<?= url('dashboard') ?>" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+                
+                <ul class="navbar-nav">
+                    <li><a href="<?= url('dashboard') ?>" class="nav-link">Dashboard</a></li>
+
+                    <li class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">Administrador ▾</a>
+                        <ul class="dropdown-menu">
+                            <?php if (\Core\Auth::isAdmin()): ?>
+                                <li><a href="<?= url('settings') ?>">Configuración</a></li>
+                            <?php endif; ?>
+                            <?php if (\Core\Auth::isSuperAdmin()): ?>
+                                <li><a href="<?= url('users') ?>">Usuarios</a></li>
+                                <li><a href="<?= url('modules') ?>">Módulos</a></li>
+                            <?php endif; ?>
+                        </ul>
                     </li>
 
-                    <!-- CRM -->
-                    <li><a href="<?= url('customers') ?>" class="nav-link"><span class="nav-icon">👤</span> Clientes</a>
-                    </li>
-                    <li><a href="<?= url('suppliers') ?>" class="nav-link"><span class="nav-icon">🏭</span> Proveedores</a>
-                    </li>
-
-                    <!-- Inventario -->
-                    <li><a href="<?= url('products') ?>" class="nav-link"><span class="nav-icon">📦</span> Productos</a>
+                    <li class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">Almacén ▾</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= url('products') ?>">Productos</a></li>
+                        </ul>
                     </li>
 
-                    <!-- Facturación -->
-                    <li><a href="<?= url('quotations') ?>" class="nav-link"><span class="nav-icon">📋</span>
-                            Cotizaciones</a></li>
-                    <li><a href="<?= url('invoices') ?>" class="nav-link"><span class="nav-icon">🧾</span> Facturas</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">Compras ▾</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= url('suppliers') ?>">Proveedores</a></li>
+                        </ul>
+                    </li>
 
-                    <?php if (\Core\Auth::isAdmin()): ?>
-                        <li><a href="<?= url('settings') ?>" class="nav-link"><span class="nav-icon">⚙️</span> Configuración</a>
-                        </li>
-                    <?php endif; ?>
-                    <?php if (\Core\Auth::isSuperAdmin()): ?>
-                        <li><a href="<?= url('users') ?>" class="nav-link"><span class="nav-icon">👥</span> Usuarios</a></li>
-                        <li><a href="<?= url('modules') ?>" class="nav-link"><span class="nav-icon">🧩</span> Módulos</a></li>
-                    <?php endif; ?>
+                    <li class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">Ventas ▾</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= url('customers') ?>">Clientes</a></li>
+                            <li><a href="<?= url('quotations') ?>">Cotizaciones</a></li>
+                            <li><a href="<?= url('invoices') ?>">Facturas</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">Contabilidad ▾</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">Próximamente</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle">Informes ▾</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">Próximamente</a></li>
+                        </ul>
+                    </li>
                 </ul>
-                <div class="sidebar-footer">
+
+                <div class="navbar-footer">
                     <div class="user-info">
                         <span class="user-name">
                             <?= e(\Core\Session::get('user_name', '')) ?>
                         </span>
-                        <span class="user-role">
-                            <?= e(\Core\Session::get('user_role', '')) ?>
-                        </span>
                     </div>
                     <a href="<?= url('logout') ?>" class="btn-logout">Cerrar sesión</a>
                 </div>
-            </nav>
+            </header>
 
             <main class="main-content">
                 <!-- Flash messages -->

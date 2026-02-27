@@ -273,9 +273,36 @@ class FacturacionController extends Controller
             );
             $newCode = $seq['prefix'] . $year . '-' . str_pad((string) $seq['current_number'], 5, '0', STR_PAD_LEFT);
 
+            // Determinar NCF basado en RNC o Cédula
+            $customer = $this->db->fetch("SELECT rnc FROM customers WHERE id = :id", ['id' => $cot['customer_id']]);
+            $rncCleaner = preg_replace('/[^0-9]/', '', $customer['rnc'] ?? '');
+            $ncfType = (strlen($rncCleaner) === 9) ? 'B01' : 'B02';
+
+            // Secuencia dinámica para NCF
+            $this->db->execute(
+                "INSERT IGNORE INTO document_sequences (document_type, prefix, year, current_number, reset_type) 
+                 VALUES (:type, :prefix, '', 0, 'NEVER')",
+                ['type' => 'NCF_' . $ncfType, 'prefix' => $ncfType]
+            );
+            $this->db->execute(
+                "UPDATE document_sequences SET current_number = current_number + 1 WHERE document_type = :type",
+                ['type' => 'NCF_' . $ncfType]
+            );
+            $ncfSeq = $this->db->fetch("SELECT current_number FROM document_sequences WHERE document_type = :type", ['type' => 'NCF_' . $ncfType]);
+            $ncf = $ncfType . str_pad((string) $ncfSeq['current_number'], 8, '0', STR_PAD_LEFT); // 11 chars
+
+            // Calcular Retenciones (Manuales desde el UI)
+            $retentionPercentage = (float) $this->input('retention_percentage', 0);
+            $retentionAmount = 0;
+            if ($retentionPercentage > 0) {
+                // Cálculo de retención con el total incluidos los impuestos
+                $retentionAmount = $cot['total'] * ($retentionPercentage / 100);
+            }
+            $finalTotal = $cot['total'] - $retentionAmount;
+
             $facId = $this->db->insert(
-                "INSERT INTO documents (document_type, sequence_code, customer_id, reference_document_id, status, currency, subtotal, discount_total, tax, total, issue_date) 
-                 VALUES ('FAC', :code, :customer, :ref, 'DRAFT', :currency, :sub, :disc, :tax, :total, :date)",
+                "INSERT INTO documents (document_type, sequence_code, customer_id, reference_document_id, status, currency, subtotal, discount_total, tax, total, issue_date, ncf, retention_percentage, retention_amount) 
+                 VALUES ('FAC', :code, :customer, :ref, 'DRAFT', :currency, :sub, :disc, :tax, :total, :date, :ncf, :ret_perc, :ret_amt)",
                 [
                     'code' => $newCode,
                     'customer' => $cot['customer_id'],
@@ -284,8 +311,11 @@ class FacturacionController extends Controller
                     'sub' => $cot['subtotal'],
                     'disc' => $cot['discount_total'],
                     'tax' => $cot['tax'],
-                    'total' => $cot['total'],
+                    'total' => $finalTotal,
                     'date' => date('Y-m-d'),
+                    'ncf' => $ncf,
+                    'ret_perc' => $retentionPercentage,
+                    'ret_amt' => $retentionAmount
                 ]
             );
 

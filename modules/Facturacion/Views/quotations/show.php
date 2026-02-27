@@ -25,6 +25,12 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
         <?php if ($doc['status'] === 'APPROVED' && !$hasInvoice): ?>
             <form method="POST" action="<?= url('quotations/convert/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
+                <div
+                    style="display:inline-block; background:#f1f5f9; padding:4px 8px; border-radius:4px; margin-right:5px;">
+                    <label style="font-size:12px; font-weight:600; color:#475569;">Retención %:</label>
+                    <input type="number" name="retention_percentage" value="0" step="0.01" min="0" max="100"
+                        style="width:60px; border:1px solid #cbd5e1; border-radius:4px; padding:4px;">
+                </div>
                 <button type="submit" class="btn btn-primary"
                     onclick="return confirm('¿Generar factura desde esta cotización?')">📄 Convertir a Factura</button>
             </form>

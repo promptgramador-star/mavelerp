@@ -50,6 +50,33 @@
 <body>
     <h1>Registro de Cambios e Infraestructura ERP</h1>
 
+    <!-- Registro v0.6.0 -->
+    <div class="change-record" style="border-left-color: #9b59b6;">
+        <h2><span class="label">Versión:</span> 0.6.0 (NCF, Retenciones y Top Navbar)</h2>
+        <p><span class="label">Fecha:</span> 2026-02-27</p>
+        <p><span class="label">Tipo:</span> UX / Contabilidad / Core</p>
+        <p><span class="label">Descripción:</span> Implementación de Números de Comprobantes Fiscales (NCF), retenciones
+            manuales y reorganización de la navegación principal.</p>
+        <p><span class="label">Impacto:</span> Facturación, UI Principal y Base de Datos</p>
+        <ul>
+            <li><strong>Generación Dinámica de NCF:</strong> Generación automática de B01 para empresas con RNC y de B02
+                para consumidores con Cédula o sin identificación tributaria al convertir cotizaciones en facturas.</li>
+            <li><strong>Retenciones Manuales:</strong> Opción para aplicar un porcentaje de retención definido
+                manualmente por el usuario al generar la factura. El monto retenido se calcula sobre el total y se
+                refleja en los formatos de impresión.</li>
+            <li><strong>Rediseño de Navegación:</strong> Sustitución de la antigua barra lateral (Sidebar) por una nueva
+                barra de navegación superior (Top Navbar) categorizada mediante menús desplegables (Dropdowns) para una
+                interfaz más limpia.</li>
+            <li><strong>Migraciones DB:</strong> Adición de campos `ncf`, `retention_percentage`, y `retention_amount` a
+                la tabla de `documents`.</li>
+        </ul>
+        <p><span class="label">Próximos Pasos:</span></p>
+        <ul>
+            <li>Integrar Reportes 606, 607, y cálculos de la DGII.</li>
+            <li>Terminar los módulos pendientes bajo las nuevas categorías (Contabilidad, Informes).</li>
+        </ul>
+    </div>
+
     <!-- Registro v0.5.0 -->
     <div class="change-record" style="border-left-color: #2ecc71;">
         <h2><span class="label">Versión:</span> 0.5.0 (Identidad Corporativa y Ciclo de Vida)</h2>
