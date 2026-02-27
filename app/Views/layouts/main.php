@@ -12,102 +12,144 @@
 
 <body>
     <?php if (\Core\Auth::check()): ?>
-        <!-- Navbar / Navegación -->
         <div class="app-layout">
-            <header class="top-navbar">
-                <div class="navbar-brand">
-                    <a href="<?= url('dashboard') ?>">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <a href="<?= url('dashboard') ?>" class="sidebar-logo">
                         <?php
                         $settings = get_settings();
                         $logo = !empty($settings['logo_path']) ? url($settings['logo_path']) : null;
                         if ($logo): ?>
-                            <img src="<?= $logo ?>" alt="Logo" style="max-height: 32px; vertical-align: middle;">
+                            <img src="<?= $logo ?>" alt="Logo">
                         <?php else: ?>
                             ERP<span>RD</span>
                         <?php endif; ?>
                     </a>
+                    <button class="mobile-close" id="mobileClose">&times;</button>
                 </div>
 
-                <ul class="navbar-nav">
-                    <li><a href="<?= url('dashboard') ?>" class="nav-link">Dashboard</a></li>
+                <nav class="sidebar-nav">
+                    <a href="<?= url('dashboard') ?>" class="nav-item">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
 
-                    <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle">Administrador ▾</a>
-                        <ul class="dropdown-menu">
+                    <div class="nav-group">
+                        <button class="nav-group-header">
+                            <span class="nav-icon">⚙️</span>
+                            <span class="nav-label">Administrador</span>
+                            <span class="nav-arrow">▾</span>
+                        </button>
+                        <div class="nav-group-items">
                             <?php if (\Core\Auth::isAdmin()): ?>
-                                <li><a href="<?= url('settings') ?>">Configuración</a></li>
+                                <a href="<?= url('settings') ?>">Configuración</a>
                             <?php endif; ?>
                             <?php if (\Core\Auth::isSuperAdmin()): ?>
-                                <li><a href="<?= url('users') ?>">Usuarios</a></li>
-                                <li><a href="<?= url('modules') ?>">Módulos</a></li>
+                                <a href="<?= url('users') ?>">Usuarios</a>
+                                <a href="<?= url('modules') ?>">Módulos</a>
                             <?php endif; ?>
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle">Almacén ▾</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="<?= url('products') ?>">Productos</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle">Compras ▾</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="<?= url('suppliers') ?>">Proveedores</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle">Ventas ▾</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="<?= url('customers') ?>">Clientes</a></li>
-                            <li><a href="<?= url('quotations') ?>">Cotizaciones</a></li>
-                            <li><a href="<?= url('invoices') ?>">Facturas</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle">Contabilidad ▾</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="#">Próximamente</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle">Informes ▾</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="#">Próximamente</a></li>
-                        </ul>
-                    </li>
-                </ul>
-
-                <div class="navbar-footer">
-                    <div class="user-info">
-                        <span class="user-name">
-                            <?= e(\Core\Session::get('user_name', '')) ?>
-                        </span>
+                        </div>
                     </div>
-                    <a href="<?= url('logout') ?>" class="btn-logout">Cerrar sesión</a>
+
+                    <div class="nav-group">
+                        <button class="nav-group-header">
+                            <span class="nav-icon">📦</span>
+                            <span class="nav-label">Almacén</span>
+                            <span class="nav-arrow">▾</span>
+                        </button>
+                        <div class="nav-group-items">
+                            <a href="<?= url('products') ?>">Productos</a>
+                        </div>
+                    </div>
+
+                    <div class="nav-group">
+                        <button class="nav-group-header">
+                            <span class="nav-icon">🛒</span>
+                            <span class="nav-label">Compras</span>
+                            <span class="nav-arrow">▾</span>
+                        </button>
+                        <div class="nav-group-items">
+                            <a href="<?= url('suppliers') ?>">Proveedores</a>
+                        </div>
+                    </div>
+
+                    <div class="nav-group">
+                        <button class="nav-group-header">
+                            <span class="nav-icon">💰</span>
+                            <span class="nav-label">Ventas</span>
+                            <span class="nav-arrow">▾</span>
+                        </button>
+                        <div class="nav-group-items">
+                            <a href="<?= url('customers') ?>">Clientes</a>
+                            <a href="<?= url('quotations') ?>">Cotizaciones</a>
+                            <a href="<?= url('invoices') ?>">Facturas</a>
+                        </div>
+                    </div>
+
+                    <div class="nav-group">
+                        <button class="nav-group-header">
+                            <span class="nav-icon">⚖️</span>
+                            <span class="nav-label">Contabilidad</span>
+                            <span class="nav-arrow">▾</span>
+                        </button>
+                        <div class="nav-group-items">
+                            <a href="#">Próximamente</a>
+                        </div>
+                    </div>
+
+                    <div class="nav-group">
+                        <button class="nav-group-header">
+                            <span class="nav-icon">📈</span>
+                            <span class="nav-label">Informes</span>
+                            <span class="nav-arrow">▾</span>
+                        </button>
+                        <div class="nav-group-items">
+                            <a href="#">Próximamente</a>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <div class="user-block">
+                        <div class="user-info">
+                            <span class="user-name"><?= e(\Core\Session::get('user_name', '')) ?></span>
+                        </div>
+                        <a href="<?= url('logout') ?>" class="logout-link">Cerrar sesión</a>
+                    </div>
                 </div>
-            </header>
+            </aside>
 
-            <main class="main-content">
-                <!-- Flash messages -->
-                <?php if ($success = flash('success')): ?>
-                    <div class="alert alert-success">
-                        <?= e($success) ?>
+            <!-- Main Content Area -->
+            <div class="main-wrapper">
+                <header class="main-header">
+                    <button class="mobile-toggle" id="mobileToggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <div class="breadcrumb">
+                        <?= e($title ?? 'ERP Propietario RD') ?>
                     </div>
-                <?php endif; ?>
-                <?php if ($error = flash('error')): ?>
-                    <div class="alert alert-error">
-                        <?= e($error) ?>
-                    </div>
-                <?php endif; ?>
+                </header>
 
-                <?= \Core\View::section('content') ?>
-            </main>
+                <main class="main-content">
+                    <?php if ($success = flash('success')): ?>
+                        <div class="alert alert-success">
+                            <?= e($success) ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($error = flash('error')): ?>
+                        <div class="alert alert-error">
+                            <?= e($error) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?= \Core\View::section('content') ?>
+                </main>
+            </div>
         </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <?php else: ?>
         <?= \Core\View::section('content') ?>
     <?php endif; ?>
