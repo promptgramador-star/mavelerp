@@ -30,7 +30,7 @@
                 </div>
 
                 <nav class="sidebar-nav">
-                    <a href="<?= url('dashboard') ?>" class="nav-item">
+                    <a href="<?= url('dashboard') ?>" class="nav-item <?= is_active('dashboard') ?>">
                         <span class="nav-icon">📊</span>
                         <span class="nav-label">Dashboard</span>
                     </a>
@@ -43,11 +43,11 @@
                         </button>
                         <div class="nav-group-items">
                             <?php if (\Core\Auth::isAdmin()): ?>
-                                <a href="<?= url('settings') ?>">Configuración</a>
+                                <a href="<?= url('settings') ?>" class="<?= is_active('settings') ?>">Configuración</a>
                             <?php endif; ?>
                             <?php if (\Core\Auth::isSuperAdmin()): ?>
-                                <a href="<?= url('users') ?>">Usuarios</a>
-                                <a href="<?= url('modules') ?>">Módulos</a>
+                                <a href="<?= url('users') ?>" class="<?= is_active('users') ?>">Usuarios</a>
+                                <a href="<?= url('modules') ?>" class="<?= is_active('modules') ?>">Módulos</a>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -59,7 +59,7 @@
                             <span class="nav-arrow">▾</span>
                         </button>
                         <div class="nav-group-items">
-                            <a href="<?= url('products') ?>">Productos</a>
+                            <a href="<?= url('products') ?>" class="<?= is_active('products') ?>">Productos</a>
                         </div>
                     </div>
 
@@ -70,7 +70,7 @@
                             <span class="nav-arrow">▾</span>
                         </button>
                         <div class="nav-group-items">
-                            <a href="<?= url('suppliers') ?>">Proveedores</a>
+                            <a href="<?= url('suppliers') ?>" class="<?= is_active('suppliers') ?>">Proveedores</a>
                         </div>
                     </div>
 
@@ -81,9 +81,9 @@
                             <span class="nav-arrow">▾</span>
                         </button>
                         <div class="nav-group-items">
-                            <a href="<?= url('customers') ?>">Clientes</a>
-                            <a href="<?= url('quotations') ?>">Cotizaciones</a>
-                            <a href="<?= url('invoices') ?>">Facturas</a>
+                            <a href="<?= url('customers') ?>" class="<?= is_active('customers') ?>">Clientes</a>
+                            <a href="<?= url('quotations') ?>" class="<?= is_active('quotations') ?>">Cotizaciones</a>
+                            <a href="<?= url('invoices') ?>" class="<?= is_active('invoices') ?>">Facturas</a>
                         </div>
                     </div>
 

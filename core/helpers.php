@@ -160,3 +160,12 @@ function get_settings(): array
     }
     return $settings;
 }
+/**
+ * Comprueba si la ruta actual coincide con la dada.
+ */
+function is_active(string $path): string
+{
+    $currentUrl = $_GET['url'] ?? '';
+    $path = trim($path, '/');
+    return (strpos($currentUrl, $path) === 0) ? 'active' : '';
+}
