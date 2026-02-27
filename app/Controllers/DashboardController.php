@@ -98,9 +98,9 @@ class DashboardController extends Controller
         );
 
         $lowStock = $this->db->fetchAll(
-            "SELECT id, name, sku, stock FROM products 
-             WHERE is_service = 0 AND stock <= 5 
-             ORDER BY stock ASC 
+            "SELECT id, name, sku, stock, low_stock_threshold FROM products 
+             WHERE is_service = 0 AND is_own_stock = 1 AND stock <= low_stock_threshold 
+             ORDER BY (stock - low_stock_threshold) ASC 
              LIMIT 8"
         );
 

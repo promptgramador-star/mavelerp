@@ -85,6 +85,8 @@ CREATE TABLE IF NOT EXISTS products (
     stock DECIMAL(15,2) DEFAULT 0,
     is_service BOOLEAN DEFAULT FALSE,
     is_taxable BOOLEAN DEFAULT TRUE,
+    is_own_stock BOOLEAN DEFAULT TRUE,
+    low_stock_threshold DECIMAL(15,2) DEFAULT 5.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

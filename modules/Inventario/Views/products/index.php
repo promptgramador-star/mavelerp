@@ -53,6 +53,15 @@
                                 <?php else: ?>
                                     <span class="badge" style="background:#dbeafe;color:#1e40af;">Producto</span>
                                 <?php endif; ?>
+                                <?php if (!$p['is_service']): ?>
+                                    <?php if ($p['is_own_stock']): ?>
+                                        <span class="badge"
+                                            style="background:#d1fae5;color:#065f46;font-size:10px;margin-left:5px;">Propio</span>
+                                    <?php else: ?>
+                                        <span class="badge"
+                                            style="background:#f3f4f6;color:#4b5563;font-size:10px;margin-left:5px;">Externo</span>
+                                    <?php endif; ?>
+                                <?php endif; ?>
                             </td>
                             <td style="text-align:right;">
                                 <?= money((float) $p['cost']) ?>
@@ -62,17 +71,27 @@
                             </td>
                             <td style="text-align:right;">
                                 <?php if (!$p['is_service']): ?>
-                                    <?php if ((float) $p['stock'] <= 0): ?>
-                                        <span style="color:var(--danger);font-weight:600;">
-                                            <?= number_format((float) $p['stock'], 2) ?>
-                                        </span>
-                                    <?php elseif ((float) $p['stock'] <= 5): ?>
-                                        <span style="color:var(--warning);font-weight:600;">
-                                            <?= number_format((float) $p['stock'], 2) ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <?= number_format((float) $p['stock'], 2) ?>
-                                    <?php endif; ?>
+                                    <?php
+                                    $stockValue = (float) $p['stock'];
+                                    $threshold = isset($p['low_stock_threshold']) ? (float) $p['low_stock_threshold'] : 5.00;
+                                    $isOwn = !isset($p['is_own_stock']) || $p['is_own_stock'];
+
+                                    $color = '';
+                                    $fontWeight = 'normal';
+
+                                    if ($isOwn) {
+                                        if ($stockValue <= 0) {
+                                            $color = 'var(--danger)';
+                                            $fontWeight = '600';
+                                        } elseif ($stockValue <= $threshold) {
+                                            $color = 'var(--warning)';
+                                            $fontWeight = '600';
+                                        }
+                                    }
+                                    ?>
+                                    <span style="color:<?= $color ?: 'inherit' ?>;font-weight:<?= $fontWeight ?>;">
+                                        <?= number_format($stockValue, 2) ?>
+                                    </span>
                                 <?php else: ?>
                                     <span style="color:var(--secondary);">N/A</span>
                                 <?php endif; ?>

@@ -39,8 +39,8 @@ class ProductController extends Controller
         $this->validateCsrf();
 
         $this->db->insert(
-            "INSERT INTO products (name, sku, cost, price, stock, is_service, is_taxable, created_at) 
-             VALUES (:name, :sku, :cost, :price, :stock, :is_service, :is_taxable, NOW())",
+            "INSERT INTO products (name, sku, cost, price, stock, is_service, is_taxable, is_own_stock, low_stock_threshold, created_at) 
+             VALUES (:name, :sku, :cost, :price, :stock, :is_service, :is_taxable, :is_own_stock, :low_stock_threshold, NOW())",
             [
                 'name' => trim($this->input('name', '')),
                 'sku' => trim($this->input('sku', '')),
@@ -49,6 +49,8 @@ class ProductController extends Controller
                 'stock' => (float) $this->input('stock', 0),
                 'is_service' => $this->input('is_service') ? 1 : 0,
                 'is_taxable' => $this->input('is_taxable') ? 1 : 0,
+                'is_own_stock' => $this->input('is_own_stock') ? 1 : 0,
+                'low_stock_threshold' => (float) $this->input('low_stock_threshold', 5),
             ]
         );
 
@@ -73,7 +75,7 @@ class ProductController extends Controller
         $this->validateCsrf();
 
         $this->db->execute(
-            "UPDATE products SET name = :name, sku = :sku, cost = :cost, price = :price, stock = :stock, is_service = :is_service, is_taxable = :is_taxable WHERE id = :id",
+            "UPDATE products SET name = :name, sku = :sku, cost = :cost, price = :price, stock = :stock, is_service = :is_service, is_taxable = :is_taxable, is_own_stock = :is_own_stock, low_stock_threshold = :low_stock_threshold WHERE id = :id",
             [
                 'id' => (int) $id,
                 'name' => trim($this->input('name', '')),
@@ -83,6 +85,8 @@ class ProductController extends Controller
                 'stock' => (float) $this->input('stock', 0),
                 'is_service' => $this->input('is_service') ? 1 : 0,
                 'is_taxable' => $this->input('is_taxable') ? 1 : 0,
+                'is_own_stock' => $this->input('is_own_stock') ? 1 : 0,
+                'low_stock_threshold' => (float) $this->input('low_stock_threshold', 5),
             ]
         );
 
@@ -109,7 +113,7 @@ class ProductController extends Controller
         $limit = (int) $this->query('limit', '10');
 
         $products = $this->db->fetchAll(
-            "SELECT id, name, sku, price, is_taxable, is_service 
+            "SELECT id, name, sku, price, is_taxable, is_service, is_own_stock 
              FROM products 
              WHERE name LIKE :q OR sku LIKE :q 
              ORDER BY name LIMIT 15",
@@ -135,9 +139,10 @@ class ProductController extends Controller
         $output = fopen('php://output', 'w');
         fwrite($output, "sep=,\n");
         fwrite($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-        fputcsv($output, ['nombre', 'sku', 'costo', 'precio', 'stock', 'es_servicio']);
-        fputcsv($output, ['Producto de Ejemplo', 'PROD-001', '500.00', '1200.00', '10', '0']);
-        fputcsv($output, ['Servicio Técnico', 'SERV-001', '0.00', '2500.00', '0', '1']);
+        fputcsv($output, ['nombre', 'sku', 'costo', 'precio', 'stock', 'es_servicio', 'es_stock_propio', 'umbral_alerta']);
+        fputcsv($output, ['Producto de Ejemplo', 'PROD-001', '500.00', '1200.00', '10', '0', '1', '5']);
+        fputcsv($output, ['Producto Externo', 'EXT-001', '800.00', '1500.00', '0', '0', '0', '0']);
+        fputcsv($output, ['Servicio Técnico', 'SERV-001', '0.00', '2500.00', '0', '1', '0', '0']);
         fclose($output);
         exit;
     }
@@ -184,15 +189,17 @@ class ProductController extends Controller
                 }
 
                 $this->db->insert(
-                    "INSERT INTO products (name, sku, cost, price, stock, is_service, created_at) 
-                     VALUES (:name, :sku, :cost, :price, :stock, :is_service, NOW())",
+                    "INSERT INTO products (name, sku, cost, price, stock, is_service, is_own_stock, low_stock_threshold, created_at) 
+                     VALUES (:name, :sku, :cost, :price, :stock, :is_service, :is_own, :low_stock, NOW())",
                     [
                         'name' => trim($data[0]),
                         'sku' => trim($data[1] ?? ''),
                         'cost' => (float) ($data[2] ?? 0),
                         'price' => (float) ($data[3] ?? 0),
                         'stock' => (float) ($data[4] ?? 0),
-                        'is_service' => (int) ($data[5] ?? 0)
+                        'is_service' => (int) ($data[5] ?? 0),
+                        'is_own' => isset($data[6]) && trim($data[6]) !== '' ? (int) $data[6] : 1, // Default True
+                        'low_stock' => isset($data[7]) && trim($data[7]) !== '' ? (float) $data[7] : 5.00 // Default 5
                     ]
                 );
                 $imported++;
