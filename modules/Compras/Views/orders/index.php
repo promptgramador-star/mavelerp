@@ -46,8 +46,8 @@
                                 </span>
                             </td>
                             <td style="text-align:center;">
-                                <a href="<?= url('purchases/show/' . $doc['id']) ?>" class="btn-action"
-                                    title="Ver / Imprimir">👁️</a>
+                                <a href="<?= url('purchases/show/' . $doc['id']) ?>" class="btn"
+                                    style="padding:4px 12px;font-size:13px;background:var(--primary);color:#fff;">Ver</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

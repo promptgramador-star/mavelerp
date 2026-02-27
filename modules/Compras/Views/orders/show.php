@@ -3,138 +3,90 @@
 $curr = $doc['currency'] ?? 'DOP'; ?>
 
 <!-- Screen UI Header -->
-<div class="page-header d-print-none" style="display:flex;justify-content:space-between;align-items:center;">
+<div class="page-header no-print" style="display:flex;justify-content:space-between;align-items:center;">
     <div>
-        <h1>Orden de Compra:
-            <?= e($doc['sequence_code']) ?>
-        </h1>
-        <p><a href="<?= url('purchases') ?>" style="color:var(--primary);text-decoration:none;">← Volver a Órdenes</a>
+        <h1>Orden de Compra: <?= e($doc['sequence_code']) ?></h1>
+        <p>Proveedor: <span style="font-weight:600;"><?= e($doc['supplier_name'] ?? '—') ?></span> | Estado:
+            <span class="status status-<?= strtolower($doc['status']) ?>"><?= e($doc['status']) ?></span>
         </p>
     </div>
     <div style="display:flex;gap:10px;">
-        <?php if ($doc['status'] === 'DRAFT'): ?>
+        <?php $st = trim($doc['status'] ?? 'DRAFT'); ?>
+
+        <?php if ($st === 'DRAFT'): ?>
             <form method="POST" action="<?= url('purchases/approve/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--success);color:#fff;"
-                    onclick="return confirm('¿Aprobar esta orden de compra?')">✅ Aprobar</button>
+                    onclick="return confirm('¿Aprobar esta orden de compra y marcarla como enviada?')">✅ Aprobar y Enviar</button>
+            </form>
+            <form method="POST" action="<?= url('purchases/paid/' . $doc['id']) ?>" style="display:inline;">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn" style="background:var(--primary);color:#fff;"
+                    onclick="return confirm('¿Marcar orden como pagada y mercancia recibida?')">💰 Marcar Pagada / Recibida</button>
             </form>
             <form method="POST" action="<?= url('purchases/cancel/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--danger);color:#fff;"
                     onclick="return confirm('¿Anular esta orden de compra?')">❌ Anular</button>
             </form>
-        <?php endif; ?>
-        <?php if ($doc['status'] === 'APPROVED' && !$hasInvoice): ?>
-            <form method="POST" action="<?= url('purchases/convert/' . $doc['id']) ?>" style="display:inline;">
+
+        <?php elseif ($st === 'SENT'): ?>
+            <form method="POST" action="<?= url('purchases/paid/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
-                <div
-                    style="display:inline-block; background:#f1f5f9; padding:4px 8px; border-radius:4px; margin-right:5px;">
-                    <label style="font-size:12px; font-weight:600; color:#475569;">Retención %:</label>
-                    <input type="number" name="retention_percentage" value="0" step="0.01" min="0" max="100"
-                        style="width:60px; border:1px solid #cbd5e1; border-radius:4px; padding:4px;">
-                </div>
-                <button type="submit" class="btn btn-primary"
-                    onclick="return confirm('¿Generar factura desde esta orden de compra?')">📄 Convertir a Factura</button>
+                <button type="submit" class="btn" style="background:var(--primary);color:#fff;"
+                    onclick="return confirm('¿Marcar orden como pagada y mercancia recibida?')">💰 Marcar Pagada / Recibida</button>
             </form>
             <form method="POST" action="<?= url('purchases/cancel/' . $doc['id']) ?>" style="display:inline;">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn" style="background:var(--danger);color:#fff;"
                     onclick="return confirm('¿Anular esta orden de compra?')">❌ Anular</button>
             </form>
+
+        <?php elseif ($st === 'PAID'): ?>
+            <span class="btn" style="background:var(--primary);color:#fff;cursor:default;">✅ Pagada / Recibida</span>
+
+        <?php elseif ($st === 'CANCELLED'): ?>
+            <span class="btn" style="background:var(--danger);color:#fff;cursor:default;">❌ Anulada</span>
         <?php endif; ?>
-        <?php if ($hasInvoice): ?>
-            <a href="<?= url('invoices/view/' . $hasInvoice['id']) ?>" class="btn"
-                style="background:#fef3c7;color:#92400e;">
-                Ver Factura <?= e($hasInvoice['sequence_code']) ?>
-            </a>
-        <?php endif; ?>
+
         <a href="<?= url('purchases/print/' . $doc['id']) ?>" target="_blank" class="btn"
             style="background:#4b5563;color:#fff;">🖨️ Imprimir</a>
         <a href="<?= url('purchases') ?>" class="btn" style="background:var(--border);color:var(--dark);">← Volver</a>
     </div>
 </div>
 
-<!-- ==================== PRINTABLE DOCUMENT ==================== -->
-<div id="printable-document">
-    <!-- Company Header -->
-    <div class="doc-header">
-        <div class="doc-header-left">
-            <?php if (!empty($settings['logo'])): ?>
-                <img src="<?= url($settings['logo']) ?>" alt="Logo" class="doc-logo">
-            <?php endif; ?>
-        </div>
-        <div class="doc-header-right">
-            <h2 class="doc-company"><?= e($settings['company_name'] ?? '') ?></h2>
-            <?php if (!empty($settings['rnc'])): ?>
-                <p><?= e($settings['rnc']) ?></p>
-            <?php endif; ?>
-            <?php if (!empty($settings['address'])): ?>
-                <p><?= e($settings['address']) ?></p>
-            <?php endif; ?>
-            <?php if (!empty($settings['phone'])): ?>
-                <p><?= e($settings['phone']) ?><?= !empty($settings['email']) ? ' · ' . e($settings['email']) : '' ?></p>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <hr class="doc-divider">
-
-    <!-- Document Title -->
-    <h3 class="doc-title">Orden de Compra: <?= e($doc['sequence_code']) ?></h3>
-
-    <!-- Client & Date Info -->
+<!-- ==================== UI DOCUMENT ==================== -->
+<div id="ui-document">
     <div class="doc-info-grid">
-        <div style="flex:1;">
-            <h3 style="color:var(--secondary);font-size:12px;text-transform:uppercase;margin-bottom:8px;">Datos del
-                Proveedor</h3>
-            <p style="margin-bottom:4px;font-weight:600;">
-                <?= e($doc['supplier_name'] ?? '') ?>
-            </p>
-            <p style="color:var(--secondary);font-size:14px;margin-bottom:4px;">RNC:
-                <?= e($doc['supplier_rnc'] ?? 'N/D') ?>
-            </p>
-            <p style="color:var(--secondary);font-size:14px;margin-bottom:4px;">
-                <?= e($doc['supplier_address'] ?? '') ?>
-            </p>
-            <p style="color:var(--secondary);font-size:14px;">
-                <?= e($doc['supplier_phone'] ?? '') ?> |
-                <?= e($doc['supplier_email'] ?? '') ?>
-            </p>
+        <div>
+            <table class="doc-info-table">
+                <tr>
+                    <td class="doc-info-label">Proveedor:</td>
+                    <td><strong><?= e($doc['supplier_name'] ?? '—') ?></strong></td>
+                </tr>
+                <?php if (!empty($doc['rnc'])): ?>
+                    <tr>
+                        <td class="doc-info-label">RNC:</td>
+                        <td><?= e($doc['rnc']) ?></td>
+                    </tr>
+                <?php endif; ?>
+                <?php if (!empty($doc['address'])): ?>
+                    <tr>
+                        <td class="doc-info-label">Dirección:</td>
+                        <td><?= e($doc['address']) ?></td>
+                    </tr>
+                <?php endif; ?>
+            </table>
         </div>
-        <div style="flex:1;">
-            <h3 style="color:var(--secondary);font-size:12px;text-transform:uppercase;margin-bottom:8px;">Detalles de la
-                Orden
-            </h3>
-            <table style="width:100%;font-size:14px;">
+        <div style="text-align:right;">
+            <table class="doc-info-table" style="margin-left:auto;">
                 <tr>
-                    <td style="color:var(--secondary);padding:4px 0;">Orden N°:</td>
-                    <td style="text-align:right;font-weight:600;">
-                        <?= e($doc['sequence_code']) ?>
-                    </td>
+                    <td class="doc-info-label">Fecha de Emisión:</td>
+                    <td><?= date('d-m-Y', strtotime($doc['issue_date'] ?? 'now')) ?></td>
                 </tr>
                 <tr>
-                    <td style="color:var(--secondary);padding:4px 0;">Fecha de Emisión:</td>
-                    <td style="text-align:right;font-weight:600;">
-                        <?= date('d-m-Y', strtotime($doc['issue_date'] ?? 'now')) ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="color:var(--secondary);padding:4px 0;">Fecha de Vencimiento:</td>
-                    <td style="text-align:right;font-weight:600;">
-                        <?= date('d-m-Y', strtotime($doc['due_date'] ?? 'now')) ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="color:var(--secondary);padding:4px 0;">Moneda:</td>
-                    <td style="text-align:right;font-weight:600;">
-                        <?= e($curr) ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="color:var(--secondary);padding:4px 0;">Estado:</td>
-                    <td style="text-align:right;font-weight:600;">
-                        <span class="status status-<?= strtolower($doc['status']) ?>"><?= e($doc['status']) ?></span>
-                    </td>
+                    <td class="doc-info-label">Moneda:</td>
+                    <td><?= e($curr) ?></td>
                 </tr>
             </table>
         </div>
@@ -198,131 +150,64 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
             </tbody>
         </table>
     </div>
-
-    <!-- Payment Info -->
-    <?php if (!empty($settings['bank_accounts'])): ?>
-        <div class="doc-payment-section">
-            <table class="doc-payment-table">
-                <thead>
-                    <tr>
-                        <th style="text-align:left;">Forma de pago</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="white-space:pre-wrap;"><?= e($settings['bank_accounts']) ?></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
 </div>
 
 <!-- Document Styles -->
 <style>
-    #printable-document {
+    /* === UI Document Styles === */
+    #ui-document {
         background: #fff;
-        max-width: 800px;
-        margin: 20px auto;
-        padding: 40px;
+        padding: 30px;
         border-radius: 8px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        font-size: 13px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        font-family: inherit;
+        font-size: 14px;
         color: #1f2937;
-    }
-
-    .doc-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 10px;
-    }
-
-    .doc-header-left {
-        flex: 0 0 auto;
-    }
-
-    .doc-header-right {
-        text-align: right;
-        font-size: 12px;
-        color: #4b5563;
-        line-height: 1.6;
-    }
-
-    .doc-logo {
-        max-height: 70px;
-        max-width: 180px;
-    }
-
-    .doc-company {
-        font-size: 18px;
-        font-weight: 700;
-        color: #111827;
-        margin: 0 0 4px 0;
-    }
-
-    .doc-divider {
-        border: none;
-        border-top: 2px solid #e5e7eb;
-        margin: 15px 0;
-    }
-
-    .doc-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 0 0 15px 0;
     }
 
     .doc-info-grid {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 20px;
-    }
-
-    .doc-info-table {
-        border-collapse: collapse;
-        font-size: 13px;
+        margin-bottom: 25px;
     }
 
     .doc-info-table td {
-        padding: 2px 8px 2px 0;
-        vertical-align: top;
+        padding: 4px;
+        color: #374151;
     }
 
     .doc-info-label {
-        font-weight: 600;
-        color: #374151;
-        white-space: nowrap;
+        color: #6b7280;
+        text-align: right;
+        padding-right: 15px !important;
+        font-weight: 500;
     }
 
     .doc-items-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
     }
 
     .doc-items-table thead {
-        background: #f0f4f8;
+        background: #f8fafc;
     }
 
     .doc-items-table th {
-        padding: 8px 10px;
-        font-size: 12px;
+        padding: 12px 15px;
+        font-size: 13px;
         font-weight: 600;
-        color: #374151;
-        border-bottom: 2px solid #d1d5db;
+        color: #475569;
         text-align: left;
-    }
-
-    .doc-items-table td {
-        padding: 8px 10px;
         border-bottom: 1px solid #e5e7eb;
     }
 
-    .doc-col-desc {
-        width: auto;
+    .doc-items-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e5e7eb;
     }
 
     .doc-col-num {
@@ -331,81 +216,29 @@ $curr = $doc['currency'] ?? 'DOP'; ?>
     }
 
     .doc-totals-section {
-        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
     }
 
     .doc-totals-table {
-        width: 100%;
+        min-width: 300px;
+        width: auto;
         border-collapse: collapse;
-    }
-
-    .doc-totals-table thead {
-        background: #1e40af;
-        color: #fff;
     }
 
     .doc-totals-table th {
-        padding: 8px 10px;
-        font-size: 12px;
-        font-weight: 600;
+        padding: 10px 15px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        font-size: 13px;
+        color: #475569;
     }
 
     .doc-totals-table td {
-        padding: 8px 10px;
-        border-bottom: 1px solid #e5e7eb;
-        font-size: 13px;
-    }
-
-    .doc-payment-section {
-        margin-top: 10px;
-    }
-
-    .doc-payment-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .doc-payment-table thead {
-        background: #1e40af;
-        color: #fff;
-    }
-
-    .doc-payment-table th {
-        padding: 8px 10px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .doc-payment-table td {
-        padding: 8px 10px;
-        font-size: 12px;
-        color: #4b5563;
-    }
-
-    @media print {
-        body {
-            background: #fff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .no-print {
-            display: none !important;
-        }
-
-        .sidebar,
-        nav,
-        .page-header.no-print {
-            display: none !important;
-        }
-
-        #printable-document {
-            box-shadow: none !important;
-            margin: 0 !important;
-            padding: 20px !important;
-            max-width: 100% !important;
-            border-radius: 0 !important;
-        }
+        padding: 10px 15px;
+        border: 1px solid #e5e7eb;
+        font-size: 14px;
+        text-align: right;
     }
 </style>
 

@@ -165,7 +165,7 @@ class ComprasController extends Controller
     }
 
     /**
-     * Muestra una Orden de Compra para imprimir.
+     * Ver detalle de la Orden de Compra.
      */
     public function show(string $id): void
     {
@@ -196,5 +196,100 @@ class ComprasController extends Controller
             'items' => $items,
             'company' => get_settings()
         ]);
+    }
+
+    /**
+     * Aprobar/Enviar Orden de Compra.
+     */
+    public function approve(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        $this->db->execute(
+            "UPDATE documents SET status = 'SENT' WHERE id = :id AND document_type = 'ORD' AND status = 'DRAFT'",
+            ['id' => (int) $id]
+        );
+
+        flash('success', 'Orden de Compra aprobada y marcada como enviada al proveedor.');
+        redirect('purchases/show/' . $id);
+    }
+
+    /**
+     * Marcar Orden de Compra como Pagada/Recibida.
+     */
+    public function markPaid(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        $this->db->execute(
+            "UPDATE documents SET status = 'PAID' WHERE id = :id AND document_type = 'ORD' AND status IN ('DRAFT', 'SENT')",
+            ['id' => (int) $id]
+        );
+
+        flash('success', 'Orden de Compra marcada como pagada y recibida.');
+        redirect('purchases/show/' . $id);
+    }
+
+    /**
+     * Anular Orden de Compra.
+     */
+    public function cancel(string $id): void
+    {
+        $this->requirePost();
+        $this->validateCsrf();
+
+        $doc = $this->db->fetch(
+            "SELECT status FROM documents WHERE id = :id AND document_type = 'ORD'",
+            ['id' => (int) $id]
+        );
+
+        if ($doc && $doc['status'] !== 'PAID') {
+            $this->db->execute(
+                "UPDATE documents SET status = 'CANCELLED' WHERE id = :id",
+                ['id' => (int) $id]
+            );
+            flash('success', 'Orden de Compra anulada correctamente.');
+        } else {
+            flash('error', 'No se puede anular una orden que ya fue marcada como pagada/recibida.');
+        }
+
+        redirect('purchases/show/' . $id);
+    }
+
+    /**
+     * Imprimir Orden de Compra (vista limpia sin layout).
+     */
+    public function printOrder(string $id): void
+    {
+        $doc = $this->db->fetch(
+            "SELECT d.*, s.name as supplier_name, s.rnc, s.address, s.phone, s.email 
+             FROM documents d 
+             LEFT JOIN suppliers s ON d.supplier_id = s.id 
+             WHERE d.id = :id AND d.document_type = 'ORD'",
+            ['id' => (int) $id]
+        );
+
+        if (!$doc) {
+            flash('error', 'Orden de Compra no encontrada.');
+            redirect('purchases');
+        }
+
+        $items = $this->db->fetchAll(
+            "SELECT i.*, p.sku 
+             FROM document_items i 
+             LEFT JOIN products p ON i.product_id = p.id 
+             WHERE i.document_id = :id 
+             ORDER BY i.line_number ASC",
+            ['id' => (int) $id]
+        );
+
+        // Al mandar "null" como layout, la vista se renderiza cruda.
+        View::module('Compras', 'orders/print', [
+            'document' => $doc,
+            'items' => $items,
+            'company' => get_settings()
+        ], null);
     }
 }
