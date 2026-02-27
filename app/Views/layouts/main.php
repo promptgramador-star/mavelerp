@@ -70,6 +70,7 @@
                             <span class="nav-arrow">▾</span>
                         </button>
                         <div class="nav-group-items">
+                            <a href="<?= url('purchases') ?>" class="<?= is_active('purchases') ?>">Órdenes de Compra</a>
                             <a href="<?= url('suppliers') ?>" class="<?= is_active('suppliers') ?>">Proveedores</a>
                         </div>
                     </div>
