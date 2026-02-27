@@ -73,15 +73,14 @@ try {
                   ON DUPLICATE KEY UPDATE prefix = 'PO'");
     echo "✅ Secuencia 'PO' inicializada.\n";
 
-    // 2. Registro del Módulo (Sin display_name por si no existe la columna)
+    // 2. Registro del Módulo (Ajustado a la estructura real de la tabla modules)
     echo "\n2. Registrando módulo Compras...\n";
     try {
-        $db->execute("INSERT IGNORE INTO modules (name, description, version, is_core) 
-                      VALUES ('Compras', 'Módulo de órdenes de compra y gestión de proveedores.', '1.0.0', 0)");
+        // Según schema.sql, la tabla modules solo tiene id, name, is_premium
+        $db->execute("INSERT IGNORE INTO modules (name, is_premium) VALUES ('Compras', 0)");
+        echo "✅ Módulo 'Compras' registrado en tabla 'modules'.\n";
     } catch (Exception $e) {
-        echo "ℹ️ Fallo al insertar módulo (campo name/display_name discordancia). Intentando alternativa...\n";
-        // Algunas versiones usan display_name, otras no.
-        $db->execute("INSERT IGNORE INTO modules (name, version, is_core) VALUES ('Compras', '1.0.0', 0)");
+        echo "❌ Error al insertar módulo: " . $e->getMessage() . "\n";
     }
 
     $mod = $db->fetch("SELECT id FROM modules WHERE name = 'Compras'");
@@ -93,7 +92,7 @@ try {
     }
 
     echo "\n--- TODO LISTO ---\n";
-    echo "1. El Dashboard ya debería funcionar.\n";
+    echo "1. El Dashboard ya debería funcionar (las columnas de stock ya existen).\n";
     echo "2. Ya puedes entrar a la sección de compras.";
 
 } catch (Exception $e) {
