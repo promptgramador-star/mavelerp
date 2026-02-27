@@ -1,6 +1,7 @@
 {
-    "name": "m_compras",
-    "description": "Módulo de compras y órdenes a proveedores.",
+    "name": "Compras",
+    "display_name": "Gestión de Compras",
     "version": "1.0.0",
-    "author": "ERP Propietario RD"
+    "description": "Módulo de órdenes de compra y gestión de proveedores.",
+    "is_premium": false
 }
