@@ -192,7 +192,7 @@ class ComprasController extends Controller
         );
 
         View::module('Compras', 'orders/show', [
-            'document' => $doc,
+            'doc' => $doc,
             'items' => $items,
             'company' => get_settings()
         ]);
@@ -287,7 +287,7 @@ class ComprasController extends Controller
 
         // Al mandar "null" como layout, la vista se renderiza cruda.
         View::module('Compras', 'orders/print', [
-            'document' => $doc,
+            'doc' => $doc,
             'items' => $items,
             'company' => get_settings()
         ], null);
