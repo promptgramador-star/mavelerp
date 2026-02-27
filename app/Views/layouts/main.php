@@ -7,7 +7,7 @@
     <title>
         <?= e($title ?? 'ERP Propietario RD') ?>
     </title>
-    <link rel="stylesheet" href="<?= url('public/css/app.css') ?>">
+    <link rel="stylesheet" href="<?= url('public/css/app.css') ?>?v=<?= time() ?>">
 </head>
 
 <body>
@@ -16,9 +16,18 @@
         <div class="app-layout">
             <header class="top-navbar">
                 <div class="navbar-brand">
-                    <a href="<?= url('dashboard') ?>">ERP<span>RD</span></a>
+                    <a href="<?= url('dashboard') ?>">
+                        <?php
+                        $settings = get_settings();
+                        $logo = !empty($settings['logo_path']) ? url($settings['logo_path']) : null;
+                        if ($logo): ?>
+                            <img src="<?= $logo ?>" alt="Logo" style="max-height: 32px; vertical-align: middle;">
+                        <?php else: ?>
+                            ERP<span>RD</span>
+                        <?php endif; ?>
+                    </a>
                 </div>
-                
+
                 <ul class="navbar-nav">
                     <li><a href="<?= url('dashboard') ?>" class="nav-link">Dashboard</a></li>
 
@@ -57,14 +66,14 @@
                             <li><a href="<?= url('invoices') ?>">Facturas</a></li>
                         </ul>
                     </li>
-                    
+
                     <li class="dropdown">
                         <a href="#" class="nav-link dropdown-toggle">Contabilidad ▾</a>
                         <ul class="dropdown-menu">
                             <li><a href="#">Próximamente</a></li>
                         </ul>
                     </li>
-                    
+
                     <li class="dropdown">
                         <a href="#" class="nav-link dropdown-toggle">Informes ▾</a>
                         <ul class="dropdown-menu">
