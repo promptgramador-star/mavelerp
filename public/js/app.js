@@ -64,7 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Solo para abrir completo en movil
     if (mobileToggle) {
-        mobileToggle.addEventListener('click', () => toggleSidebar(true));
+        mobileToggle.addEventListener('click', () => {
+            if (window.innerWidth > 992) {
+                toggleDesktopSidebar();
+            } else {
+                toggleSidebar(true);
+            }
+        });
     }
 
     const sidebarToggle = document.getElementById('sidebarToggle');

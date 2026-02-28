@@ -17,7 +17,7 @@
             <aside class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <a href="<?= url('dashboard') ?>" class="sidebar-logo">
-                        <img src="<?= url('uploads/system_branding_logo.png') ?>" alt="Mavel ERP">
+                        <img src="<?= url('public/uploads/system_branding_logo.png') ?>" alt="Mavel ERP">
                     </a>
                     <button class="mobile-toggle sidebar-toggle" id="sidebarToggle" style="margin-right:0;">
                         <span></span>

@@ -316,6 +316,10 @@ body {
     display: none !important;
 }
 
+.app-layout.sidebar-collapsed .main-header .mobile-toggle {
+    display: flex !important;
+}
+
 .app-layout.sidebar-collapsed .main-wrapper {
     margin-left: 70px;
     width: calc(100% - 70px);
