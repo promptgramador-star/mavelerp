@@ -36,14 +36,47 @@ class CustomerController extends Controller
         $this->requirePost();
         $this->validateCsrf();
 
+        $name = trim($this->input('name', ''));
+        $rnc = trim($this->input('rnc', ''));
+        $phone = trim($this->input('phone', ''));
+        $email = trim($this->input('email', ''));
+        $address = trim($this->input('address', ''));
+
+        // Bloquear RNCs falsos como "11111111111"
+        if (!empty($rnc) && preg_match('/^(.)\1+$/', $rnc)) {
+            flash('error', 'El RNC o cédula introducido no es válido.');
+            redirect('customers/create');
+            return;
+        }
+
+        // Si el usuario introduce RNC, checar si ya existe alguien con ese documento
+        if (!empty($rnc)) {
+            $existing = $this->db->fetch("SELECT id FROM customers WHERE rnc = :rnc", ['rnc' => $rnc]);
+            if ($existing) {
+                flash('error', "Ya existe un cliente registrado con la c&eacute;dula o RNC: {$rnc}");
+                redirect('customers/create');
+                return;
+            }
+        }
+
+        // Si no introducen RNC, evitamos crear múltiples clientes con el mismo nombre
+        if (empty($rnc)) {
+            $existingName = $this->db->fetch("SELECT id FROM customers WHERE name = :name", ['name' => $name]);
+            if ($existingName) {
+                flash('error', "Ya existe un cliente registrado llamado '{$name}'. Si es distinto, por favor identifíquelo con un RNC o Cédula.");
+                redirect('customers/create');
+                return;
+            }
+        }
+
         $this->db->insert(
             "INSERT INTO customers (name, rnc, phone, email, address) VALUES (:name, :rnc, :phone, :email, :address)",
             [
-                'name' => trim($this->input('name', '')),
-                'rnc' => trim($this->input('rnc', '')),
-                'phone' => trim($this->input('phone', '')),
-                'email' => trim($this->input('email', '')),
-                'address' => trim($this->input('address', '')),
+                'name' => $name,
+                'rnc' => $rnc,
+                'phone' => $phone,
+                'email' => $email,
+                'address' => $address,
             ]
         );
 
