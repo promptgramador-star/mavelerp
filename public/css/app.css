@@ -187,6 +187,10 @@ body {
     background: rgba(0, 0, 0, 0.2);
 }
 
+.main-content {
+    padding: 30px 40px;
+}
+
 .user-block {
     display: flex;
     flex-direction: column;
@@ -235,13 +239,23 @@ body {
 }
 
 .mobile-toggle {
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 4px;
     background: none;
     border: none;
     cursor: pointer;
     margin-right: 20px;
+}
+
+/* Sidebar collapsed state (Desktop) */
+.app-layout.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+}
+
+.app-layout.sidebar-collapsed .main-wrapper {
+    margin-left: 0;
+    width: 100%;
 }
 
 .mobile-toggle span {

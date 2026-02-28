@@ -18,12 +18,20 @@ class DashboardController extends Controller
         $currentMonthEnd = date('Y-m-t');
 
         // ── NIVEL 1: KPIs Financieros ──────────────────────────
-        $salesMonth = $this->db->fetch(
-            "SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as count 
+        $salesMonthRecords = $this->db->fetchAll(
+            "SELECT currency, COALESCE(SUM(total), 0) as total, COUNT(*) as count 
              FROM documents 
-             WHERE document_type = 'FAC' AND issue_date BETWEEN :start AND :end",
+             WHERE document_type = 'FAC' AND issue_date BETWEEN :start AND :end
+             GROUP BY currency",
             ['start' => $currentMonth, 'end' => $currentMonthEnd]
         );
+        $salesByCurrency = ['DOP' => 0, 'USD' => 0];
+        $salesCount = 0;
+        foreach ($salesMonthRecords as $row) {
+            $curr = $row['currency'] ?: 'DOP';
+            $salesByCurrency[$curr] = ($salesByCurrency[$curr] ?? 0) + (float) $row['total'];
+            $salesCount += (int) $row['count'];
+        }
 
         $pendingQuotations = $this->db->fetch(
             "SELECT COUNT(*) as total FROM documents 
@@ -35,55 +43,81 @@ class DashboardController extends Controller
              WHERE document_type = 'COT' AND status = 'APPROVED'"
         );
 
-        $accountsReceivable = $this->db->fetch(
-            "SELECT COALESCE(SUM(total), 0) as total FROM documents 
-             WHERE document_type = 'FAC' AND status = 'DRAFT'"
+        $receivableRecords = $this->db->fetchAll(
+            "SELECT currency, COALESCE(SUM(total), 0) as total FROM documents 
+             WHERE document_type = 'FAC' AND status = 'DRAFT'
+             GROUP BY currency"
         );
+        $receivableByCurrency = ['DOP' => 0, 'USD' => 0];
+        foreach ($receivableRecords as $row) {
+            $curr = $row['currency'] ?: 'DOP';
+            $receivableByCurrency[$curr] = ($receivableByCurrency[$curr] ?? 0) + (float) $row['total'];
+        }
 
         // Delta: comparar con mes anterior
         $prevMonthStart = date('Y-m-01', strtotime('-1 month'));
         $prevMonthEnd = date('Y-m-t', strtotime('-1 month'));
-        $salesPrevMonth = $this->db->fetch(
-            "SELECT COALESCE(SUM(total), 0) as total FROM documents 
-             WHERE document_type = 'FAC' AND issue_date BETWEEN :start AND :end",
+        $salesPrevRecords = $this->db->fetchAll(
+            "SELECT currency, COALESCE(SUM(total), 0) as total FROM documents 
+             WHERE document_type = 'FAC' AND issue_date BETWEEN :start AND :end
+             GROUP BY currency",
             ['start' => $prevMonthStart, 'end' => $prevMonthEnd]
         );
+        $salesPrevByCurrency = ['DOP' => 0, 'USD' => 0];
+        foreach ($salesPrevRecords as $row) {
+            $curr = $row['currency'] ?: 'DOP';
+            $salesPrevByCurrency[$curr] = ($salesPrevByCurrency[$curr] ?? 0) + (float) $row['total'];
+        }
 
         $kpis = [
-            'sales_month' => (float) $salesMonth['total'],
-            'sales_count' => (int) $salesMonth['count'],
-            'sales_prev' => (float) $salesPrevMonth['total'],
+            'sales_month' => $salesByCurrency,
+            'sales_count' => $salesCount,
+            'sales_prev' => $salesPrevByCurrency,
             'pending_cot' => (int) $pendingQuotations['total'],
             'approved_cot' => (int) $approvedQuotations['total'],
-            'receivable' => (float) $accountsReceivable['total'],
+            'receivable' => $receivableByCurrency,
         ];
 
         // ── NIVEL 2: Tendencia 6 Meses ─────────────────────────
-        $trendData = [];
+        $trendData = [
+            'labels' => [],
+            'dop' => [],
+            'usd' => []
+        ];
         for ($i = 5; $i >= 0; $i--) {
             $monthStart = date('Y-m-01', strtotime("-{$i} months"));
             $monthEnd = date('Y-m-t', strtotime("-{$i} months"));
             $monthLabel = date('M Y', strtotime("-{$i} months"));
 
-            $row = $this->db->fetch(
-                "SELECT COALESCE(SUM(total), 0) as total FROM documents 
-                 WHERE document_type = 'FAC' AND issue_date BETWEEN :start AND :end",
+            $trendData['labels'][] = $monthLabel;
+
+            $records = $this->db->fetchAll(
+                "SELECT currency, COALESCE(SUM(total), 0) as total FROM documents 
+                 WHERE document_type = 'FAC' AND issue_date BETWEEN :start AND :end
+                 GROUP BY currency",
                 ['start' => $monthStart, 'end' => $monthEnd]
             );
 
-            $trendData[] = [
-                'label' => $monthLabel,
-                'value' => (float) $row['total'],
-            ];
+            $dopTotal = 0;
+            $usdTotal = 0;
+            foreach ($records as $row) {
+                if (($row['currency'] ?? 'DOP') === 'USD') {
+                    $usdTotal += (float) $row['total'];
+                } else {
+                    $dopTotal += (float) $row['total'];
+                }
+            }
+            $trendData['dop'][] = $dopTotal;
+            $trendData['usd'][] = $usdTotal;
         }
 
         // Top 5 Clientes por facturación
         $topCustomers = $this->db->fetchAll(
-            "SELECT c.name, COALESCE(SUM(d.total), 0) as revenue 
+            "SELECT c.name, d.currency, COALESCE(SUM(d.total), 0) as revenue 
              FROM documents d 
              INNER JOIN customers c ON d.customer_id = c.id 
              WHERE d.document_type = 'FAC' 
-             GROUP BY c.id, c.name 
+             GROUP BY c.id, c.name, d.currency 
              ORDER BY revenue DESC 
              LIMIT 5"
         );

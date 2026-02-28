@@ -56,7 +56,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (mobileToggle) {
-        mobileToggle.addEventListener('click', () => toggleSidebar(true));
+        mobileToggle.addEventListener('click', () => {
+            if (window.innerWidth > 992) {
+                const appLayout = document.querySelector('.app-layout');
+                if (appLayout) {
+                    appLayout.classList.toggle('sidebar-collapsed');
+                }
+            } else {
+                toggleSidebar(true);
+            }
+        });
     }
 
     if (mobileClose) {

@@ -15,21 +15,26 @@
 <!-- ═══════════════ NIVEL 1: KPIs Financieros ═══════════════ -->
 <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
 
-    <!-- KPI: Ventas del Mes -->
     <div class="stat-card" style="border-left: 4px solid var(--primary);">
         <div class="stat-icon" style="background:#eff6ff;">💰</div>
         <div class="stat-info">
-            <h3><?= money($kpis['sales_month']) ?></h3>
-            <p>Ventas del Mes</p>
+            <h3 style="font-size:18px;margin-bottom:2px;">
+                DOP <?= money($kpis['sales_month']['DOP'] ?? 0) ?><br>
+                <span style="font-size:14px;color:var(--secondary);">USD
+                    <?= money($kpis['sales_month']['USD'] ?? 0) ?></span>
+            </h3>
+            <p style="margin-top:2px;">Ventas del Mes</p>
             <?php
-            $delta = $kpis['sales_prev'] > 0
-                ? round((($kpis['sales_month'] - $kpis['sales_prev']) / $kpis['sales_prev']) * 100, 1)
+            $prevDop = $kpis['sales_prev']['DOP'] ?? 0;
+            $currDop = $kpis['sales_month']['DOP'] ?? 0;
+            $delta = $prevDop > 0
+                ? round((($currDop - $prevDop) / $prevDop) * 100, 1)
                 : 0;
             $deltaColor = $delta >= 0 ? 'var(--success)' : 'var(--danger)';
             $deltaIcon = $delta >= 0 ? '↑' : '↓';
             ?>
             <span style="font-size:12px;color:<?= $deltaColor ?>;font-weight:600;">
-                <?= $deltaIcon ?> <?= abs($delta) ?>% vs mes anterior
+                <?= $deltaIcon ?> <?= abs($delta) ?>% (DOP) vs anterior
             </span>
         </div>
     </div>
@@ -62,8 +67,12 @@
     <div class="stat-card" style="border-left: 4px solid var(--danger);">
         <div class="stat-icon" style="background:#fef2f2;">📊</div>
         <div class="stat-info">
-            <h3><?= money($kpis['receivable']) ?></h3>
-            <p>Cuentas por Cobrar</p>
+            <h3 style="font-size:18px;margin-bottom:2px;">
+                DOP <?= money($kpis['receivable']['DOP'] ?? 0) ?><br>
+                <span style="font-size:14px;color:var(--secondary);">USD
+                    <?= money($kpis['receivable']['USD'] ?? 0) ?></span>
+            </h3>
+            <p style="margin-top:2px;">Cuentas por Cobrar</p>
             <span style="font-size:12px;color:var(--secondary);">Facturas pendientes</span>
         </div>
     </div>
@@ -183,34 +192,49 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
     // ── Tendencia de Ventas (Line Chart) ──
-    const trendLabels = <?= json_encode(array_column($trendData, 'label')) ?>;
-    const trendValues = <?= json_encode(array_column($trendData, 'value')) ?>;
+    const trendLabels = <?= json_encode($trendData['labels']) ?>;
+    const trendDOP = <?= json_encode($trendData['dop']) ?>;
+    const trendUSD = <?= json_encode($trendData['usd']) ?>;
 
     new Chart(document.getElementById('trendChart'), {
         type: 'line',
         data: {
             labels: trendLabels,
-            datasets: [{
-                label: 'Ventas (DOP)',
-                data: trendValues,
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37,99,235,0.08)',
-                fill: true,
-                tension: 0.4,
-                borderWidth: 2.5,
-                pointBackgroundColor: '#2563eb',
-                pointRadius: 4,
-                pointHoverRadius: 6,
-            }]
+            datasets: [
+                {
+                    label: 'DOP',
+                    data: trendDOP,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37,99,235,0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#2563eb',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                },
+                {
+                    label: 'USD',
+                    data: trendUSD,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16,185,129,0.08)',
+                    fill: false,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: { display: true },
                 tooltip: {
                     callbacks: {
-                        label: ctx => 'DOP ' + ctx.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2 })
+                        label: ctx => ctx.dataset.label + ' ' + ctx.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2 })
                     }
                 }
             },
@@ -218,7 +242,7 @@
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: v => 'DOP ' + (v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v),
+                        callback: v => (v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v),
                         font: { size: 11 }
                     },
                     grid: { color: 'rgba(0,0,0,0.04)' }
@@ -233,15 +257,15 @@
 
     // ── Top Clientes (Horizontal Bar Chart) ──
     <?php if (!empty($topCustomers)): ?>
-        const topLabels = <?= json_encode(array_column($topCustomers, 'name')) ?>;
+        const topLabelsRaw = <?= json_encode(array_map(fn($c) => $c['name'] . ' (' . ($c['currency'] ?: 'DOP') . ')', $topCustomers)) ?>;
         const topValues = <?= json_encode(array_map(fn($c) => (float) $c['revenue'], $topCustomers)) ?>;
 
         new Chart(document.getElementById('topChart'), {
             type: 'bar',
             data: {
-                labels: topLabels,
+                labels: topLabelsRaw,
                 datasets: [{
-                    label: 'Facturación (DOP)',
+                    label: 'Facturación',
                     data: topValues,
                     backgroundColor: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'],
                     borderRadius: 6,
