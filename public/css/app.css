@@ -52,7 +52,7 @@ body {
     left: 0;
     bottom: 0;
     z-index: 1000;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-header {
@@ -231,6 +231,7 @@ body {
     flex: 1;
     margin-left: 260px;
     width: calc(100% - 260px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-header {
@@ -279,12 +280,45 @@ body {
 
 /* Sidebar collapsed state (Desktop) */
 .app-layout.sidebar-collapsed .sidebar {
-    transform: translateX(-100%);
+    width: 70px;
+}
+
+.app-layout.sidebar-collapsed .sidebar-header {
+    padding: 0;
+    justify-content: center;
+}
+
+.app-layout.sidebar-collapsed .sidebar-logo {
+    display: none;
+    /* Hide branding text/logo when collapsed */
+}
+
+.app-layout.sidebar-collapsed .sidebar-toggle {
+    margin: 0 auto;
+}
+
+.app-layout.sidebar-collapsed .nav-label,
+.app-layout.sidebar-collapsed .nav-arrow {
+    display: none;
+}
+
+.app-layout.sidebar-collapsed .nav-item,
+.app-layout.sidebar-collapsed .nav-group-header {
+    padding: 12px 0;
+    justify-content: center;
+}
+
+.app-layout.sidebar-collapsed .nav-icon {
+    margin-right: 0;
+}
+
+.app-layout.sidebar-collapsed .nav-group-items {
+    display: none !important;
 }
 
 .app-layout.sidebar-collapsed .main-wrapper {
-    margin-left: 0;
-    width: 100%;
+    margin-left: 70px;
+    width: calc(100% - 70px);
 }
 
 .mobile-toggle span {
