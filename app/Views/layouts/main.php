@@ -17,15 +17,13 @@
             <aside class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <a href="<?= url('dashboard') ?>" class="sidebar-logo">
-                        <?php
-                        $settings = get_settings();
-                        $logo = !empty($settings['logo']) ? url($settings['logo']) : null;
-                        if ($logo): ?>
-                            <img src="<?= $logo ?>" alt="Logo">
-                        <?php else: ?>
-                            ERP<span>RD</span>
-                        <?php endif; ?>
+                        <img src="<?= url('public/img/brand-logo.png') ?>" alt="Mavel ERP">
                     </a>
+                    <button class="mobile-toggle sidebar-toggle" id="sidebarToggle" style="margin-right:0;">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                     <button class="mobile-close" id="mobileClose">&times;</button>
                 </div>
 

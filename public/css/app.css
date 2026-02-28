@@ -272,6 +272,11 @@ body {
     transition: all 0.2s;
 }
 
+/* Specific for sidebar toggle in dark background */
+.sidebar-toggle span {
+    background: var(--white);
+}
+
 .breadcrumb {
     font-weight: 600;
     color: var(--dark);

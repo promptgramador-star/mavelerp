@@ -55,17 +55,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const toggleDesktopSidebar = () => {
+        const appLayout = document.querySelector('.app-layout');
+        if (appLayout) {
+            appLayout.classList.toggle('sidebar-collapsed');
+        }
+    };
+
     if (mobileToggle) {
         mobileToggle.addEventListener('click', () => {
             if (window.innerWidth > 992) {
-                const appLayout = document.querySelector('.app-layout');
-                if (appLayout) {
-                    appLayout.classList.toggle('sidebar-collapsed');
-                }
+                toggleDesktopSidebar();
             } else {
                 toggleSidebar(true);
             }
         });
+    }
+
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleDesktopSidebar);
     }
 
     if (mobileClose) {
