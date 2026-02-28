@@ -169,3 +169,64 @@ function is_active(string $path): string
     $path = trim($path, '/');
     return (strpos($currentUrl, $path) === 0) ? 'active' : '';
 }
+
+/**
+ * Valida el nombre o razon social de un cliente/proveedor
+ */
+function validate_entity_name(string $name): ?string {
+    $cleanName = trim($name);
+    if (strlen($cleanName) < 3) {
+        return 'Nombre inválido. Debe contener un nombre o razón social válida.';
+    }
+    if (preg_match('/^\d+$/', $cleanName)) {
+        return 'Nombre inválido. Debe contener un nombre o razón social válida.';
+    }
+    if (in_array(strtolower($cleanName), ['me', 'yo'])) {
+        return 'Nombre inválido. Debe contener un nombre o razón social válida.';
+    }
+    if (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u', $cleanName)) {
+        return 'Nombre inválido. Debe contener un nombre o razón social válida.';
+    }
+    return null;
+}
+
+/**
+ * Valida el RNC o Cédula
+ */
+function validate_rnc_cedula(string $rnc): ?string {
+    $rnc = trim($rnc);
+    if (empty($rnc)) return null;
+
+    if (!preg_match('/^[0-9\-]+$/', $rnc)) {
+        return 'Caracteres inválidos en el documento (solo números y guiones).';
+    }
+
+    $cleanRnc = str_replace('-', '', $rnc);
+    $len = strlen($cleanRnc);
+
+    if ($len === 9) {
+        if (strpos($rnc, '-') !== false && !preg_match('/^\d{3}-\d{5}-\d{1}$/', $rnc)) {
+            return 'RNC inválido. Verifique el formato.';
+        }
+        return null;
+    } elseif ($len === 11) {
+        if (strpos($rnc, '-') !== false && !preg_match('/^\d{3}-\d{7}-\d{1}$/', $rnc)) {
+            return 'Cédula inválida. Debe contener 11 dígitos.';
+        }
+        return null;
+    }
+
+    return ($len < 11 && $len !== 9) ? 'RNC inválido. Verifique el formato.' : 'Cédula inválida. Debe contener 11 dígitos.';
+}
+
+/**
+ * Valida un teléfono
+ */
+function validate_phone(string $phone): ?string {
+    if (empty(trim($phone))) return null;
+    if (strlen(trim($phone)) > 20) {
+        return 'El teléfono no puede exceder los 20 caracteres.';
+    }
+    return null;
+}
+

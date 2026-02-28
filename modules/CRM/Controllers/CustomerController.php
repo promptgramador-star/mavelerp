@@ -42,6 +42,24 @@ class CustomerController extends Controller
         $email = trim($this->input('email', ''));
         $address = trim($this->input('address', ''));
 
+        if ($err = validate_entity_name($name)) {
+            flash('error', $err);
+            redirect('customers/create');
+            return;
+        }
+
+        if ($err = validate_rnc_cedula($rnc)) {
+            flash('error', $err);
+            redirect('customers/create');
+            return;
+        }
+
+        if ($err = validate_phone($phone)) {
+            flash('error', $err);
+            redirect('customers/create');
+            return;
+        }
+
         // Bloquear RNCs falsos como "11111111111"
         if (!empty($rnc) && preg_match('/^(.)\1+$/', $rnc)) {
             flash('error', 'El RNC o cédula introducido no es válido.');
@@ -100,15 +118,45 @@ class CustomerController extends Controller
         $this->requirePost();
         $this->validateCsrf();
 
+        $name = trim($this->input('name', ''));
+        $rnc = trim($this->input('rnc', ''));
+        $phone = trim($this->input('phone', ''));
+        $email = trim($this->input('email', ''));
+        $address = trim($this->input('address', ''));
+
+        if ($err = validate_entity_name($name)) {
+            flash('error', $err);
+            redirect('customers/edit/' . $id);
+            return;
+        }
+
+        if ($err = validate_rnc_cedula($rnc)) {
+            flash('error', $err);
+            redirect('customers/edit/' . $id);
+            return;
+        }
+
+        if ($err = validate_phone($phone)) {
+            flash('error', $err);
+            redirect('customers/edit/' . $id);
+            return;
+        }
+
+        if (!empty($rnc) && preg_match('/^(.)\1+$/', $rnc)) {
+            flash('error', 'El RNC o cédula introducido no es válido.');
+            redirect('customers/edit/' . $id);
+            return;
+        }
+
         $this->db->execute(
             "UPDATE customers SET name = :name, rnc = :rnc, phone = :phone, email = :email, address = :address WHERE id = :id",
             [
                 'id' => (int) $id,
-                'name' => trim($this->input('name', '')),
-                'rnc' => trim($this->input('rnc', '')),
-                'phone' => trim($this->input('phone', '')),
-                'email' => trim($this->input('email', '')),
-                'address' => trim($this->input('address', '')),
+                'name' => $name,
+                'rnc' => $rnc,
+                'phone' => $phone,
+                'email' => $email,
+                'address' => $address,
             ]
         );
 

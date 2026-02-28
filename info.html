@@ -50,6 +50,42 @@
 <body>
     <h1>Registro de Cambios e Infraestructura ERP</h1>
 
+    <!-- Registro v0.7.1 -->
+    <div class="change-record" style="border-left-color: #e74c3c;">
+        <h2><span class="label">Versión:</span> 0.7.1 (Validación Domicana de Entidades & Branding Sidebar)</h2>
+        <p><span class="label">Fecha:</span>
+            <?= date('Y-m-d') ?>
+        </p>
+        <p><span class="label">Tipo:</span> Estabilidad / UI / Core</p>
+        <p><span class="label">Descripción:</span> Refuerzo total de validaciones backend y frontend para RNC, Cédula y
+            Nombres, previniendo datos basura en clientes y proveedores. Además, consolidación definitiva del logo en el
+            menú lateral y corrección de comportamientos del menú hamburguesa.</p>
+        <p><span class="label">Impacto:</span> Clientes, Proveedores, Layout Principal</p>
+        <ul>
+            <li><strong>Validación Estricta de RNC/Cédula:</strong> Se impide guardar letras o caracteres raros.
+                Validadores automáticos y máscaras imponen el formato de 9 dígitos para RNC (000-00000-0) o 11 dígitos
+                para Cédula (000-0000000-0). Se exige la exactitud dominicana.</li>
+            <li><strong>Sanitización de Nombres:</strong> Prohibidos nombres sin sentido (solo digitos, "me", "yo"...) y
+                forzados a usar solo letras, acentos y un mínimo de 3 caracteres de longitud válida. Se incluyó tanto
+                por JS (Frontend) como interceptor directo en PHP (Backend).</li>
+            <li><strong>Límites Controlados:</strong> Campos como teléfonos no permiten longitudes exageradas.</li>
+            <li><strong>UI Responsiva - Sidebar Collapse:</strong> El menú lateral ahora se achica para maximizar
+                espacio de trabajo, mostrando solo iconos; los botones <i>toggle</i> controlan eficientemente la
+                apertura.</li>
+            <li><strong>Branding Constante:</strong> Asignación segura de url `/uploads/logo/system_branding_logo.png`
+                (físicamente validada o delegada a URL externa fija) para evitar la pérdida del logo entre secciones y
+                conflictos con el `company_logo` del usuario.</li>
+        </ul>
+        <p><span class="label">Próximos Pasos Pendientes:</span></p>
+        <ul>
+            <li><strong>Fase A:</strong> Impacto automático en almacén al marcar una Orden de Compra como Pagada y
+                sistema de conversión a Cuentas por Pagar.</li>
+            <li><strong>Fase B:</strong> Dashboard de Compras (gastos métricos), ABM enriquecido de Proveedores y
+                re-evaluación automática del costo promedio de productos.</li>
+            <li><strong>Integración Fiscal:</strong> Reportes 606, 607, y cálculos de la DGII.</li>
+        </ul>
+    </div>
+
     <!-- Registro v0.7.0 -->
     <div class="change-record" style="border-left-color: #f1c40f;">
         <h2><span class="label">Versión:</span> 0.7.0 (Sidebar, PO Avanzados e Inventario Inteligente)</h2>

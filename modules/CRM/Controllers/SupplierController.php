@@ -36,14 +36,64 @@ class SupplierController extends Controller
         $this->requirePost();
         $this->validateCsrf();
 
+        $name = trim($this->input('name', ''));
+        $rnc = trim($this->input('rnc', ''));
+        $phone = trim($this->input('phone', ''));
+        $email = trim($this->input('email', ''));
+        $address = trim($this->input('address', ''));
+
+        if ($err = validate_entity_name($name)) {
+            flash('error', $err);
+            redirect('suppliers/create');
+            return;
+        }
+
+        if ($err = validate_rnc_cedula($rnc)) {
+            flash('error', $err);
+            redirect('suppliers/create');
+            return;
+        }
+
+        if ($err = validate_phone($phone)) {
+            flash('error', $err);
+            redirect('suppliers/create');
+            return;
+        }
+
+        if (!empty($rnc) && preg_match('/^(.)\1+$/', $rnc)) {
+            flash('error', 'El RNC o cédula introducido no es válido.');
+            redirect('suppliers/create');
+            return;
+        }
+
+        // Si el usuario introduce RNC, checar si ya existe alguien con ese documento
+        if (!empty($rnc)) {
+            $existing = $this->db->fetch("SELECT id FROM suppliers WHERE rnc = :rnc", ['rnc' => $rnc]);
+            if ($existing) {
+                flash('error', "Ya existe un proveedor registrado con la c&eacute;dula o RNC: {$rnc}");
+                redirect('suppliers/create');
+                return;
+            }
+        }
+
+        // Si no introducen RNC, evitamos crear múltiples con el mismo nombre
+        if (empty($rnc)) {
+            $existingName = $this->db->fetch("SELECT id FROM suppliers WHERE name = :name", ['name' => $name]);
+            if ($existingName) {
+                flash('error', "Ya existe un proveedor registrado llamado '{$name}'. Si es distinto, por favor identifíquelo con un RNC o Cédula.");
+                redirect('suppliers/create');
+                return;
+            }
+        }
+
         $this->db->insert(
             "INSERT INTO suppliers (name, rnc, phone, email, address) VALUES (:name, :rnc, :phone, :email, :address)",
             [
-                'name' => trim($this->input('name', '')),
-                'rnc' => trim($this->input('rnc', '')),
-                'phone' => trim($this->input('phone', '')),
-                'email' => trim($this->input('email', '')),
-                'address' => trim($this->input('address', '')),
+                'name' => $name,
+                'rnc' => $rnc,
+                'phone' => $phone,
+                'email' => $email,
+                'address' => $address,
             ]
         );
 
@@ -67,15 +117,45 @@ class SupplierController extends Controller
         $this->requirePost();
         $this->validateCsrf();
 
+        $name = trim($this->input('name', ''));
+        $rnc = trim($this->input('rnc', ''));
+        $phone = trim($this->input('phone', ''));
+        $email = trim($this->input('email', ''));
+        $address = trim($this->input('address', ''));
+
+        if ($err = validate_entity_name($name)) {
+            flash('error', $err);
+            redirect('suppliers/edit/' . $id);
+            return;
+        }
+
+        if ($err = validate_rnc_cedula($rnc)) {
+            flash('error', $err);
+            redirect('suppliers/edit/' . $id);
+            return;
+        }
+
+        if ($err = validate_phone($phone)) {
+            flash('error', $err);
+            redirect('suppliers/edit/' . $id);
+            return;
+        }
+
+        if (!empty($rnc) && preg_match('/^(.)\1+$/', $rnc)) {
+            flash('error', 'El RNC o cédula introducido no es válido.');
+            redirect('suppliers/edit/' . $id);
+            return;
+        }
+
         $this->db->execute(
             "UPDATE suppliers SET name = :name, rnc = :rnc, phone = :phone, email = :email, address = :address WHERE id = :id",
             [
                 'id' => (int) $id,
-                'name' => trim($this->input('name', '')),
-                'rnc' => trim($this->input('rnc', '')),
-                'phone' => trim($this->input('phone', '')),
-                'email' => trim($this->input('email', '')),
-                'address' => trim($this->input('address', '')),
+                'name' => $name,
+                'rnc' => $rnc,
+                'phone' => $phone,
+                'email' => $email,
+                'address' => $address,
             ]
         );
 
