@@ -122,7 +122,8 @@
             <!-- Main Content Area -->
             <div class="main-wrapper">
                 <header class="main-header">
-                    <button class="mobile-toggle" id="mobileToggle">
+                    <!-- Solo visible en Móvil para abrir el sidebar -->
+                    <button class="mobile-toggle" id="mobileToggle" style="margin-right:20px;">
                         <span></span>
                         <span></span>
                         <span></span>

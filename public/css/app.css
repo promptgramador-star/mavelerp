@@ -246,7 +246,7 @@ body {
 }
 
 .mobile-toggle {
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 4px;
     background: none;
@@ -259,6 +259,18 @@ body {
 
 .mobile-toggle:hover {
     background: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
 .sidebar-toggle:hover {
@@ -323,6 +335,10 @@ body {
     .mobile-toggle,
     .mobile-close {
         display: flex;
+    }
+
+    .sidebar-toggle {
+        display: none !important;
     }
 
     .sidebar-overlay.open {

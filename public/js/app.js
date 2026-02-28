@@ -62,19 +62,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Solo para abrir completo en movil
     if (mobileToggle) {
-        mobileToggle.addEventListener('click', () => {
-            if (window.innerWidth > 992) {
-                toggleDesktopSidebar();
-            } else {
-                toggleSidebar(true);
-            }
-        });
+        mobileToggle.addEventListener('click', () => toggleSidebar(true));
     }
 
     const sidebarToggle = document.getElementById('sidebarToggle');
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', toggleDesktopSidebar);
+        sidebarToggle.addEventListener('click', () => {
+            if (window.innerWidth > 992) {
+                toggleDesktopSidebar();
+            } else {
+                // On mobile, the hamburger was moved inside the sidebar header, 
+                // but what about opening the sidebar if it's already closed?
+                // Let's rely on standard logic: 
+                toggleSidebar(true);
+            }
+        });
     }
 
     if (mobileClose) {
