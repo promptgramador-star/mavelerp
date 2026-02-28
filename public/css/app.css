@@ -268,10 +268,11 @@ body {
     gap: 4px;
     background: none;
     border: none;
-    padding: 8px;
+    padding: 10px;
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.2s;
+    z-index: 1010;
 }
 
 .sidebar-toggle:hover {
