@@ -78,8 +78,15 @@ body {
 }
 
 .sidebar-logo img {
-    max-height: 35px;
+    max-height: 40px;
+    max-width: 100%;
     width: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-logo:hover img {
+    transform: scale(1.05);
 }
 
 .mobile-close {

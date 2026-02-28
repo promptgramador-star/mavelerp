@@ -19,7 +19,7 @@
                     <a href="<?= url('dashboard') ?>" class="sidebar-logo">
                         <?php
                         $settings = get_settings();
-                        $logo = !empty($settings['logo_path']) ? url($settings['logo_path']) : null;
+                        $logo = !empty($settings['logo']) ? url($settings['logo']) : null;
                         if ($logo): ?>
                             <img src="<?= $logo ?>" alt="Logo">
                         <?php else: ?>
