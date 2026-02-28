@@ -13,11 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     groupHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            const group = header.parentElement;
+        header.addEventListener('click', (e) => {
+            e.preventDefault();
+            const group = header.closest('.nav-group');
 
-            // If it's already open, do nothing (stays open)
-            if (group.classList.contains('open')) return;
+            // If it's already open, click it to close (toggle functionality is better than forcing open)
+            if (group.classList.contains('open')) {
+                group.classList.remove('open');
+                return;
+            }
 
             // Close others and open this one
             closeAllGroups();
