@@ -14,6 +14,10 @@ class DashboardController extends Controller
     public function index(): void
     {
         $user = Auth::user();
+        $settings = get_settings();
+        $currencies = explode(',', $settings['currency'] ?? 'DOP');
+        $defaultCurrency = $settings['default_currency'] ?? 'DOP';
+
         $currentMonth = date('Y-m-01');
         $currentMonthEnd = date('Y-m-t');
 
@@ -25,11 +29,21 @@ class DashboardController extends Controller
              GROUP BY currency",
             ['start' => $currentMonth, 'end' => $currentMonthEnd]
         );
-        $salesByCurrency = ['DOP' => 0, 'USD' => 0];
+        $salesByCurrency = [];
+        // Inicializar arreglos en 0, liderado por la moneda actual
+        $salesByCurrency[$defaultCurrency] = 0;
+        foreach ($currencies as $c) {
+            $c = trim($c);
+            if ($c !== $defaultCurrency)
+                $salesByCurrency[$c] = 0;
+        }
+
         $salesCount = 0;
         foreach ($salesMonthRecords as $row) {
-            $curr = $row['currency'] ?: 'DOP';
-            $salesByCurrency[$curr] = ($salesByCurrency[$curr] ?? 0) + (float) $row['total'];
+            $curr = $row['currency'] ?: $defaultCurrency;
+            if (!isset($salesByCurrency[$curr]))
+                $salesByCurrency[$curr] = 0;
+            $salesByCurrency[$curr] += (float) $row['total'];
             $salesCount += (int) $row['count'];
         }
 
@@ -48,10 +62,19 @@ class DashboardController extends Controller
              WHERE document_type = 'FAC' AND status = 'DRAFT'
              GROUP BY currency"
         );
-        $receivableByCurrency = ['DOP' => 0, 'USD' => 0];
+        $receivableByCurrency = [];
+        $receivableByCurrency[$defaultCurrency] = 0;
+        foreach ($currencies as $c) {
+            $c = trim($c);
+            if ($c !== $defaultCurrency)
+                $receivableByCurrency[$c] = 0;
+        }
+
         foreach ($receivableRecords as $row) {
-            $curr = $row['currency'] ?: 'DOP';
-            $receivableByCurrency[$curr] = ($receivableByCurrency[$curr] ?? 0) + (float) $row['total'];
+            $curr = $row['currency'] ?: $defaultCurrency;
+            if (!isset($receivableByCurrency[$curr]))
+                $receivableByCurrency[$curr] = 0;
+            $receivableByCurrency[$curr] += (float) $row['total'];
         }
 
         // Delta: comparar con mes anterior
@@ -63,10 +86,19 @@ class DashboardController extends Controller
              GROUP BY currency",
             ['start' => $prevMonthStart, 'end' => $prevMonthEnd]
         );
-        $salesPrevByCurrency = ['DOP' => 0, 'USD' => 0];
+        $salesPrevByCurrency = [];
+        $salesPrevByCurrency[$defaultCurrency] = 0;
+        foreach ($currencies as $c) {
+            $c = trim($c);
+            if ($c !== $defaultCurrency)
+                $salesPrevByCurrency[$c] = 0;
+        }
+
         foreach ($salesPrevRecords as $row) {
-            $curr = $row['currency'] ?: 'DOP';
-            $salesPrevByCurrency[$curr] = ($salesPrevByCurrency[$curr] ?? 0) + (float) $row['total'];
+            $curr = $row['currency'] ?: $defaultCurrency;
+            if (!isset($salesPrevByCurrency[$curr]))
+                $salesPrevByCurrency[$curr] = 0;
+            $salesPrevByCurrency[$curr] += (float) $row['total'];
         }
 
         $kpis = [
@@ -81,9 +113,14 @@ class DashboardController extends Controller
         // ── NIVEL 2: Tendencia 6 Meses ─────────────────────────
         $trendData = [
             'labels' => [],
-            'dop' => [],
-            'usd' => []
+            'data' => []
         ];
+
+        // Setup initial structure for chart based on available currencies
+        foreach ($currencies as $c) {
+            $trendData['data'][trim($c)] = [];
+        }
+
         for ($i = 5; $i >= 0; $i--) {
             $monthStart = date('Y-m-01', strtotime("-{$i} months"));
             $monthEnd = date('Y-m-t', strtotime("-{$i} months"));
@@ -98,18 +135,41 @@ class DashboardController extends Controller
                 ['start' => $monthStart, 'end' => $monthEnd]
             );
 
-            $dopTotal = 0;
-            $usdTotal = 0;
+            // Fetch records for all active currencies
+            $monthTotals = [];
+            foreach ($currencies as $c) {
+                $monthTotals[trim($c)] = 0;
+            }
+
             foreach ($records as $row) {
-                if (($row['currency'] ?? 'DOP') === 'USD') {
-                    $usdTotal += (float) $row['total'];
-                } else {
-                    $dopTotal += (float) $row['total'];
+                $curr = $row['currency'] ?: $defaultCurrency;
+                if (isset($monthTotals[$curr])) {
+                    $monthTotals[$curr] += (float) $row['total'];
                 }
             }
-            $trendData['dop'][] = $dopTotal;
-            $trendData['usd'][] = $usdTotal;
+
+            foreach ($currencies as $c) {
+                $curr = trim($c);
+                $trendData['data'][$curr][] = $monthTotals[$curr];
+            }
         }
+
+        // ── NIVEL 3: Actividad Reciente ────────────────────────
+        $recentDocs = $this->db->fetchAll(
+            "SELECT d.id, d.document_type, d.sequence_code, d.status, d.total, d.currency, d.created_at, 
+                    c.name as customer_name, s.name as supplier_name
+             FROM documents d
+             LEFT JOIN customers c ON d.customer_id = c.id
+             LEFT JOIN suppliers s ON d.supplier_id = s.id
+             ORDER BY d.created_at DESC LIMIT 5"
+        );
+
+        $lowStock = $this->db->fetchAll(
+            "SELECT id, name, sku, stock, is_service, low_stock_threshold 
+             FROM products 
+             WHERE is_service = 0 AND is_own_stock = 1 AND stock <= low_stock_threshold
+             ORDER BY stock ASC LIMIT 5"
+        );
 
         // Top 5 Clientes por facturación
         $topCustomers = $this->db->fetchAll(
@@ -120,22 +180,6 @@ class DashboardController extends Controller
              GROUP BY c.id, c.name, d.currency 
              ORDER BY revenue DESC 
              LIMIT 5"
-        );
-
-        // ── NIVEL 3: Detalles ──────────────────────────────────
-        $recentDocs = $this->db->fetchAll(
-            "SELECT d.*, c.name as customer_name 
-             FROM documents d 
-             LEFT JOIN customers c ON d.customer_id = c.id 
-             ORDER BY d.created_at DESC 
-             LIMIT 5"
-        );
-
-        $lowStock = $this->db->fetchAll(
-            "SELECT id, name, sku, stock, low_stock_threshold FROM products 
-             WHERE is_service = 0 AND is_own_stock = 1 AND stock <= low_stock_threshold 
-             ORDER BY (stock - low_stock_threshold) ASC 
-             LIMIT 8"
         );
 
         // Contadores generales (para referencia)
@@ -152,6 +196,7 @@ class DashboardController extends Controller
             'recentDocs' => $recentDocs,
             'lowStock' => $lowStock,
             'counts' => $counts,
+            'defaultCurrency' => $defaultCurrency
         ]);
     }
 }

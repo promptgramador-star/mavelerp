@@ -9,6 +9,7 @@
 <?php
 $appSettings = get_settings();
 $currencies = explode(',', $appSettings['currency'] ?? 'DOP');
+$defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
 ?>
 <form method="POST" action="<?= url('purchases/store') ?>" id="poForm">
     <?= csrf_field() ?>
@@ -40,8 +41,10 @@ $currencies = explode(',', $appSettings['currency'] ?? 'DOP');
                         <?php foreach ($currencies as $curr):
                             $curr = trim($curr);
                             if (!$curr)
-                                continue; ?>
-                            <option value="<?= $curr ?>"><?= $curr ?></option>
+                                continue;
+                            ?>
+                            <option value="<?= $curr ?>" <?= $curr === $defaultCurrency ? 'selected' : '' ?>><?= $curr ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -238,7 +241,7 @@ $currencies = explode(',', $appSettings['currency'] ?? 'DOP');
         calcLine(line);
     }
 
-    let currentCurrency = 'DOP';
+    let currentCurrency = '<?= $defaultCurrency ?>';
 
     function updateCurrencySymbol() {
         const currSelect = document.getElementById('currency');

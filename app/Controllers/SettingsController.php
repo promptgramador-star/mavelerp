@@ -40,6 +40,7 @@ class SettingsController extends Controller
             'email' => trim($this->input('email', '')),
             'bank_accounts' => trim($this->input('bank_accounts', '')),
             'currency' => is_array($this->input('currency')) ? implode(',', $this->input('currency')) : trim($this->input('currency', 'DOP')),
+            'default_currency' => trim($this->input('default_currency', 'DOP')),
             'fiscal_year_start' => $this->input('fiscal_year_start'),
         ];
 

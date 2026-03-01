@@ -82,6 +82,21 @@
                         <label><input type="checkbox" name="currency[]" value="EUR" <?= in_array('EUR', $currencies) ? 'checked' : '' ?>> EUR - Euro</label>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="default_currency">Moneda Predeterminada</label>
+                    <?php $defaultCurr = $settings['default_currency'] ?? 'DOP'; ?>
+                    <select name="default_currency" id="default_currency" class="form-control"
+                        style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: white;">
+                        <option value="DOP" <?= $defaultCurr === 'DOP' ? 'selected' : '' ?>>DOP - Peso Dominicano</option>
+                        <option value="USD" <?= $defaultCurr === 'USD' ? 'selected' : '' ?>>USD - Dólar Estadounidense
+                        </option>
+                        <option value="EUR" <?= $defaultCurr === 'EUR' ? 'selected' : '' ?>>EUR - Euro</option>
+                    </select>
+                    <small style="color:var(--secondary);display:block;margin-top:4px;">Esta moneda tendrá prioridad
+                        visual en el Dashboard y será la seleccionada por defecto al crear nuevos documentos.</small>
+                </div>
+
                 <div class="form-group">
                     <label for="fiscal_year_start">Inicio Año Fiscal</label>
                     <input type="date" id="fiscal_year_start" name="fiscal_year_start"

@@ -19,22 +19,27 @@
         <div class="stat-icon" style="background:#eff6ff;">💰</div>
         <div class="stat-info">
             <h3 style="font-size:18px;margin-bottom:2px;">
-                DOP <?= money($kpis['sales_month']['DOP'] ?? 0) ?><br>
-                <span style="font-size:14px;color:var(--secondary);">USD
-                    <?= money($kpis['sales_month']['USD'] ?? 0) ?></span>
+                <?= $defaultCurrency ?> <?= money($kpis['sales_month'][$defaultCurrency] ?? 0) ?><br>
+                <?php foreach ($kpis['sales_month'] as $curr => $val): ?>
+                    <?php if ($curr !== $defaultCurrency): ?>
+                        <span style="font-size:14px;color:var(--secondary);margin-right:8px;">
+                            <?= e($curr) ?>         <?= money($val) ?>
+                        </span>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             </h3>
             <p style="margin-top:2px;">Ventas del Mes</p>
             <?php
-            $prevDop = $kpis['sales_prev']['DOP'] ?? 0;
-            $currDop = $kpis['sales_month']['DOP'] ?? 0;
-            $delta = $prevDop > 0
-                ? round((($currDop - $prevDop) / $prevDop) * 100, 1)
+            $prevDef = $kpis['sales_prev'][$defaultCurrency] ?? 0;
+            $currDef = $kpis['sales_month'][$defaultCurrency] ?? 0;
+            $delta = $prevDef > 0
+                ? round((($currDef - $prevDef) / $prevDef) * 100, 1)
                 : 0;
             $deltaColor = $delta >= 0 ? 'var(--success)' : 'var(--danger)';
             $deltaIcon = $delta >= 0 ? '↑' : '↓';
             ?>
             <span style="font-size:12px;color:<?= $deltaColor ?>;font-weight:600;">
-                <?= $deltaIcon ?> <?= abs($delta) ?>% (DOP) vs anterior
+                <?= $deltaIcon ?> <?= abs($delta) ?>% (<?= $defaultCurrency ?>) vs anterior
             </span>
         </div>
     </div>
@@ -68,9 +73,14 @@
         <div class="stat-icon" style="background:#fef2f2;">📊</div>
         <div class="stat-info">
             <h3 style="font-size:18px;margin-bottom:2px;">
-                DOP <?= money($kpis['receivable']['DOP'] ?? 0) ?><br>
-                <span style="font-size:14px;color:var(--secondary);">USD
-                    <?= money($kpis['receivable']['USD'] ?? 0) ?></span>
+                <?= $defaultCurrency ?> <?= money($kpis['receivable'][$defaultCurrency] ?? 0) ?><br>
+                <?php foreach ($kpis['receivable'] as $curr => $val): ?>
+                    <?php if ($curr !== $defaultCurrency): ?>
+                        <span style="font-size:14px;color:var(--secondary);margin-right:8px;">
+                            <?= e($curr) ?>         <?= money($val) ?>
+                        </span>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             </h3>
             <p style="margin-top:2px;">Cuentas por Cobrar</p>
             <span style="font-size:12px;color:var(--secondary);">Facturas pendientes</span>
@@ -193,39 +203,60 @@
 <script>
     // ── Tendencia de Ventas (Line Chart) ──
     const trendLabels = <?= json_encode($trendData['labels']) ?>;
-    const trendDOP = <?= json_encode($trendData['dop']) ?>;
-    const trendUSD = <?= json_encode($trendData['usd']) ?>;
+    const trendDatasetsData = <?= json_encode($trendData['data']) ?>;
+    const defaultCurrency = <?= json_encode($defaultCurrency) ?>;
+
+    const baseColors = [
+        { border: '#2563eb', bg: 'rgba(37,99,235,0.08)' }, // Blue
+        { border: '#10b981', bg: 'rgba(16,185,129,0.08)' }, // Green
+        { border: '#f59e0b', bg: 'rgba(245,158,11,0.08)' }, // Yellow/Orange
+        { border: '#8b5cf6', bg: 'rgba(139,92,246,0.08)' }  // Purple
+    ];
+
+    const datasets = [];
+    let colorIndex = 0;
+
+    // Push default currency first
+    if (trendDatasetsData[defaultCurrency]) {
+        datasets.push({
+            label: defaultCurrency,
+            data: trendDatasetsData[defaultCurrency],
+            borderColor: baseColors[0].border,
+            backgroundColor: baseColors[0].bg,
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2.5,
+            pointBackgroundColor: baseColors[0].border,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+        });
+        colorIndex++;
+    }
+
+    // Push the rest
+    for (const [curr, dataArray] of Object.entries(trendDatasetsData)) {
+        if (curr === defaultCurrency) continue;
+        const color = baseColors[colorIndex % baseColors.length];
+        datasets.push({
+            label: curr,
+            data: dataArray,
+            borderColor: color.border,
+            backgroundColor: color.bg,
+            fill: false, // Don't fill secondary currencies to avoid mess
+            tension: 0.4,
+            borderWidth: 2.5,
+            pointBackgroundColor: color.border,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+        });
+        colorIndex++;
+    }
 
     new Chart(document.getElementById('trendChart'), {
         type: 'line',
         data: {
             labels: trendLabels,
-            datasets: [
-                {
-                    label: 'DOP',
-                    data: trendDOP,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37,99,235,0.08)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 2.5,
-                    pointBackgroundColor: '#2563eb',
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                },
-                {
-                    label: 'USD',
-                    data: trendUSD,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16,185,129,0.08)',
-                    fill: false,
-                    tension: 0.4,
-                    borderWidth: 2.5,
-                    pointBackgroundColor: '#10b981',
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                }
-            ]
+            datasets: datasets
         },
         options: {
             responsive: true,
