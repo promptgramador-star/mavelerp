@@ -1,9 +1,12 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
 if (!defined('BASE_PATH')) {
     define('BASE_PATH', __DIR__);
 }
-require_once BASE_PATH . '/config/app.php';
-require_once BASE_PATH . '/helpers.php';
+
+require_once BASE_PATH . '/core/helpers.php';
 require_once BASE_PATH . '/core/Database.php';
 
 use Core\Database;
