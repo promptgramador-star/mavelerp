@@ -216,6 +216,7 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
         <td><button type="button" onclick="removeLine(${lineCount})" style="background:none;border:none;cursor:pointer;font-size:16px;">❌</button></td>
     `;
         document.getElementById('itemsBody').appendChild(row);
+        calcLine(lineCount);
     }
 
     async function searchProduct(input, line) {
@@ -240,7 +241,7 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
                         <div style="font-weight:500;">${p.name}</div>
                         <span class="sku" style="font-size:10px;padding:1px 4px;">${p.sku || 'S/N'}</span>
                     </div>
-                    <div class="price" style="font-weight:700;color:var(--primary);">${currentCurrency} ${parseFloat(p.price).toLocaleString(undefined, {minimumFractionDigits:2})}</div>
+                    <div class="price" style="font-weight:700;color:var(--primary);">${currentCurrency} ${parseFloat(p.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                 `;
                 item.onclick = () => selectProduct(p, line);
                 resultsDiv.appendChild(item);
@@ -264,7 +265,12 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
         calcLine(line);
     }
 
-    let currentCurrency = 'DOP';
+    let currentCurrency = '<?= $defaultCurrency ?>';
+
+    window.onload = () => {
+        updateCurrencySymbol();
+        addLine(); // Add first line automatically
+    };
 
     function updateCurrencySymbol() {
         const currSelect = document.getElementById('currency');

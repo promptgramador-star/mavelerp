@@ -216,6 +216,7 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
         <td><button type="button" onclick="removeLine(${lineCount})" style="background:none;border:none;cursor:pointer;font-size:16px;">❌</button></td>
     `;
         document.getElementById('itemsBody').appendChild(row);
+        calcLine(lineCount);
     }
 
     async function searchProduct(input, line) {
@@ -265,6 +266,11 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
     }
 
     let currentCurrency = '<?= $defaultCurrency ?>';
+
+    window.onload = () => {
+        updateCurrencySymbol();
+        addLine(); // Add first line automatically
+    };
 
     function updateCurrencySymbol() {
         const currSelect = document.getElementById('currency');
