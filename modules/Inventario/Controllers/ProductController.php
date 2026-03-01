@@ -113,10 +113,10 @@ class ProductController extends Controller
         $limit = (int) $this->query('limit', '10');
 
         $products = $this->db->fetchAll(
-            "SELECT id, name, sku, price, is_taxable, is_service, is_own_stock 
+            "SELECT id, name, sku, price, cost, is_taxable, is_service, is_own_stock 
              FROM products 
              WHERE name LIKE :q OR sku LIKE :q 
-             ORDER BY name LIMIT 15",
+             ORDER BY name LIMIT 50",
             ['q' => "%{$q}%"]
         );
 

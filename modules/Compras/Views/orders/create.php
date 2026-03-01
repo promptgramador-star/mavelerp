@@ -53,10 +53,8 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-header">
             <h2>Ítems</h2>
-            <button type="button" onclick="addLine()" class="btn btn-primary" style="padding:6px 12px;font-size:13px;">+
-                Agregar Línea</button>
         </div>
         <div class="card-body" style="overflow-x:auto;">
             <table class="table" id="itemsTable">
@@ -75,6 +73,17 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
                 </thead>
                 <tbody id="itemsBody">
                     <!-- Se llena con JS -->
+                </tbody>
+                <tbody>
+                    <tr>
+                        <td colspan="9" style="padding: 10px 0;">
+                            <button type="button" onclick="addLine()" class="btn"
+                                style="background:var(--primary);color:#fff;border-radius:50%;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;margin-left:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1);"
+                                title="Agregar Línea">
+                                <span style="font-size:20px;font-weight:bold;">+</span>
+                            </button>
+                        </td>
+                    </tr>
                 </tbody>
                 <tfoot>
                     <tr>
@@ -117,6 +126,22 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
         position: relative;
     }
 
+    .search-wrapper::before {
+        content: '🔍';
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--secondary);
+        font-size: 14px;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .search-wrapper input {
+        padding-left: 32px !important;
+    }
+
     .search-results {
         position: absolute;
         top: 100%;
@@ -125,11 +150,12 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 8px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         z-index: 1000;
-        max-height: 250px;
+        max-height: 300px;
         overflow-y: auto;
         display: none;
+        margin-top: 4px;
     }
 
     .search-item {
@@ -170,14 +196,16 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
         <td style="text-align:center;color:var(--secondary);">${lineCount}</td>
         <td>
             <div class="search-wrapper">
-                <input type="text" placeholder="Buscar por nombre o SKU..." onkeyup="searchProduct(this, ${lineCount})" 
+                <input type="text" placeholder="Buscar por nombre o SKU..." 
+                    onkeyup="searchProduct(this, ${lineCount})" 
+                    onfocus="searchProduct(this, ${lineCount})"
                     style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;" autocomplete="off">
                 <div id="results-${lineCount}" class="search-results"></div>
                 <input type="hidden" name="item_product_id[]" id="prodId-${lineCount}">
             </div>
         </td>
         <td><input type="text" name="item_description[]" id="desc-${lineCount}" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"></td>
-        <td><input type="number" name="item_quantity[]" id="qty-${lineCount}" value="1" step="0.01" min="0.01" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;"></td>
+        <td><input type="number" name="item_quantity[]" id="qty-${lineCount}" value="1" step="1" min="1" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;"></td>
         <td><input type="number" name="item_price[]" id="price-${lineCount}" value="0" step="0.01" min="0" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:right;"></td>
         <td><input type="number" name="item_discount_percent[]" id="disc-${lineCount}" value="0" step="0.01" min="0" max="100" onchange="calcLine(${lineCount})" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;text-align:right;"></td>
         <td style="text-align:center;">
@@ -194,11 +222,6 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
         const query = input.value.trim();
         const resultsDiv = document.getElementById('results-' + line);
 
-        if (query.length < 2) {
-            resultsDiv.style.display = 'none';
-            return;
-        }
-
         try {
             const resp = await fetch('<?= url("api/products/search") ?>?q=' + encodeURIComponent(query));
             const products = await resp.json();
@@ -213,11 +236,11 @@ $defaultCurrency = $appSettings['default_currency'] ?? 'DOP';
                 const item = document.createElement('div');
                 item.className = 'search-item';
                 item.innerHTML = `
-                    <div>
+                    <div style="flex:1;">
                         <div style="font-weight:500;">${p.name}</div>
-                        <span class="sku">${p.sku || 'S/N'}</span>
+                        <span class="sku" style="font-size:10px;padding:1px 4px;">${p.sku || 'S/N'}</span>
                     </div>
-                    <div class="price">DOP ${parseFloat(p.price).toLocaleString()}</div>
+                    <div class="price" style="font-weight:700;color:var(--primary);">${currentCurrency} ${parseFloat(p.cost).toLocaleString(undefined, { minimumFractionDigits: 2 })} (Costo)</div>
                 `;
                 item.onclick = () => selectProduct(p, line);
                 resultsDiv.appendChild(item);
