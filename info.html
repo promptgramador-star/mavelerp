@@ -52,43 +52,42 @@
 
     <!-- Registro v0.7.1 -->
     <div class="change-record" style="border-left-color: #e74c3c;">
-        <h2><span class="label">Versión:</span> 0.7.1 (Validación Domicana de Entidades & Branding Sidebar)</h2>
+        <h2><span class="label">Versión:</span> 0.7.1 (Core Stability, Default Currency & UI Efficiency)</h2>
         <p><span class="label">Fecha:</span>
             <?= date('Y-m-d') ?>
         </p>
         <p><span class="label">Tipo:</span> Estabilidad / UI / Core</p>
         <p><span class="label">Descripción:</span> Refuerzo total de validaciones backend y frontend para RNC, Cédula y
-            Nombres, previniendo datos basura en clientes y proveedores. Además, consolidación definitiva del logo en el
-            menú lateral y corrección de comportamientos del menú hamburguesa.</p>
+            Nombres. Implementación de Moneda Predeterminada en todo el sistema y Dashboard. Mejoras drásticas de UX en
+            la creación de documentos mediante un buscador tipo "Finder" y optimización ergonómica de tablas.</p>
         <p><span class="label">Impacto:</span> Clientes, Proveedores, Layout Principal</p>
         <ul>
-            <li><strong>Validación Estricta de RNC/Cédula:</strong> Se impide guardar letras o caracteres raros.
-                Validadores automáticos y máscaras imponen el formato de 9 dígitos para RNC (000-00000-0) o 11 dígitos
-                para Cédula (000-0000000-0). Se exige la exactitud dominicana.</li>
-            <li><strong>Sanitización de Nombres:</strong> Prohibidos nombres sin sentido (solo digitos, "me", "yo"...) y
-                forzados a usar solo letras, acentos y un mínimo de 3 caracteres de longitud válida. Se incluyó tanto
-                por JS (Frontend) como interceptor directo en PHP (Backend).</li>
-            <li><strong>Límites Controlados:</strong> Campos como teléfonos no permiten longitudes exageradas.</li>
-            <li><strong>UI Responsiva - Sidebar Collapse:</strong> El menú lateral ahora se achica para maximizar
-                espacio de trabajo, mostrando solo iconos; los botones <i>toggle</i> controlan eficientemente la
-                apertura.</li>
-            <li><strong>Branding Constante:</strong> Asignación segura de url `/uploads/logo/system_branding_logo.png`
-                (físicamente validada o delegada a URL externa fija) para evitar la pérdida del logo entre secciones y
-                conflictos con el `company_logo` del usuario.</li>
+            <li><strong>Validación Estricta de RNC/Cédula/Nombres:</strong> Se impide guardar datos inválidos mediante
+                máscaras y validadores backend/frontend dominicanos.</li>
+            <li><strong>Moneda Predeterminada:</strong> Configuración de moneda base (base currency) que impacta
+                automáticamente en el Dashboard y pre-selecciona la divisa en todos los nuevos documentos.</li>
+            <li><strong>Dashboard Inteligente:</strong> Priorización visual de la moneda principal en KPIs de Ventas y
+                Cuentas por Cobrar, con desglose dinámico de monedas secundarias.</li>
+            <li><strong>UX: Buscador de Productos (Finder):</strong> Los productos ahora aparecen automáticamente al
+                hacer clic/foco en el campo (estilo listbox), con soporte para búsqueda rápida y límite de 50
+                resultados.</li>
+            <li><strong>UX: Tabla de Ítems Ergonómica:</strong> Botón de "Agregar Línea" movido a una posición circular
+                flotante al final de la tabla para mayor velocidad de carga. Cantidades forzadas a números enteros.</li>
+            <li><strong>Sincronización Fiscal:</strong> Corrección de errores en la conversión de Cotización a Factura
+                mediante la inclusión segura de columnas NCF y Retenciones en la base de datos.</li>
+            <li><strong>Branding Sidebar:</strong> Logo persistente en el menú lateral con soporte para colapso
+                responsivo.</li>
         </ul>
         <p><span class="label">Próximos Pasos Pendientes:</span></p>
         <ul>
-            <li><strong>Moneda Predeterminada & Dashboard:</strong> Definir en configuración una moneda base para todo
-                el sistema (Cotizaciones, Facturas, Compras) y ajustar el Dashboard para priorizar dicha moneda, dejando
-                las secundarias (ej. DOP) como informativas abajo.</li>
-            <li><strong>Sistema de Respaldo Fiable (Backups):</strong> Implementación de copias de seguridad de la base
-                de datos con encriptación nativa para seguridad de la data. Programación semanal automática manteniendo
-                un ciclo de máximo 4 archivos (el más antiguo se elimina al entrar el quinto).</li>
-            <li><strong>Fase A:</strong> Impacto automático en almacén al marcar una Orden de Compra como Pagada y
-                sistema de conversión a Cuentas por Pagar.</li>
-            <li><strong>Fase B:</strong> Dashboard de Compras (gastos métricos), ABM enriquecido de Proveedores y
-                re-evaluación automática del costo promedio de productos.</li>
-            <li><strong>Integración Fiscal:</strong> Reportes 606, 607, y cálculos de la DGII.</li>
+            <li><strong>Sistema de Respaldo Encriptado (Prioridad):</strong> Implementación de backups de BD con
+                encriptación nativa y rotación automática (máximo 4 archivos semanales).</li>
+            <li><strong>Almacén Automatizado:</strong> Impacto automático en stock al marcar Órdenes de Compra como
+                Pagadas.</li>
+            <li><strong>Cuentas por Pagar:</strong> Generación automática de pasivos desde compras aprobadas.</li>
+            <li><strong>Dashboard de Gastos:</strong> Métricas de compras y re-evaluación de costo promedio de
+                productos.</li>
+            <li><strong>Reportes Fiscales DGII:</strong> Exportación de formatos 606 y 607.</li>
         </ul>
     </div>
 
